@@ -1,0 +1,16 @@
+assets/logo-source.png
+assets/ready-answers-page.png
+assets/pbe-academy-icon.ico
+
+# Node / Playwright dev tooling
+node_modules/
+
+# Playwright generated output
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# Local screenshot smoke-test output
+tmp-*.png
+tmp-*.jpg
