@@ -108,6 +108,40 @@ a {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.2));
 }
 
+.mission-statement {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: -4.8rem auto 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 252, 0.96);
+  box-shadow: var(--shadow);
+  padding: 1.75rem 2rem;
+  text-align: center;
+}
+
+.mission-statement h1 {
+  margin: 0 0 0.85rem;
+  color: #060a0d;
+  font-size: 1.95rem;
+  line-height: 1.08;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.mission-statement p {
+  max-width: 760px;
+  margin: 0 auto;
+  color: #153039;
+  font-size: 1.08rem;
+  line-height: 1.55;
+}
+
+.mission-statement p + p {
+  margin-top: 0.85rem;
+}
+
 .feature-grid {
   position: relative;
   z-index: 1;
@@ -118,7 +152,7 @@ a {
     "resources resources";
   gap: 1.35rem;
   max-width: 1080px;
-  margin: -5.1rem auto 0;
+  margin: 0 auto;
   padding: 0 1.5rem;
 }
 
@@ -394,13 +428,17 @@ h2 span {
     height: 235px;
   }
 
+  .mission-statement {
+    max-width: calc(100% - 3rem);
+    margin-top: -4.1rem;
+  }
+
   .feature-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
       "score"
       "fitb"
       "resources";
-    margin-top: -4.3rem;
   }
 }
 
@@ -427,9 +465,23 @@ h2 span {
     border-radius: 0;
   }
 
+  .mission-statement {
+    max-width: none;
+    margin: -2.3rem 0.9rem 1rem;
+    padding: 1.2rem 1.05rem;
+  }
+
+  .mission-statement h1 {
+    font-size: 1.45rem;
+  }
+
+  .mission-statement p {
+    font-size: 0.98rem;
+    line-height: 1.48;
+  }
+
   .feature-grid {
     gap: 1rem;
-    margin-top: -3rem;
     padding: 0 0.9rem;
   }
 
