@@ -149,7 +149,8 @@ a {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
     "score fitb"
-    "resources resources";
+    "official-resources official-resources"
+    "unofficial-resources unofficial-resources";
   gap: 1.35rem;
   max-width: 1080px;
   margin: 0 auto;
@@ -170,10 +171,6 @@ a {
 
 .fitb-card {
   grid-area: fitb;
-}
-
-.resources-card {
-  grid-area: resources;
 }
 
 .card-heading {
@@ -228,7 +225,7 @@ h2 span {
 }
 
 .fitb-screenshot {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 16 / 10;
   object-position: top center;
 }
 
@@ -278,13 +275,6 @@ h2 span {
   outline-offset: 2px;
 }
 
-.caption {
-  margin: 0.6rem 0 0.85rem;
-  text-align: center;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
 .feature-list {
   margin: 0;
   padding: 0;
@@ -308,29 +298,35 @@ h2 span {
   font-size: 1.85rem;
 }
 
-.fitb-content {
-  display: grid;
-  grid-template-columns: minmax(190px, 0.92fr) minmax(0, 1fr);
-  gap: 1.35rem;
-  align-items: start;
-}
-
-.fitb-window {
-  font-size: 0.72rem;
-}
-
-.fitb-copy {
-  padding-top: 0.15rem;
-}
-
-.fitb-copy .caption {
-  margin-top: 0;
-  text-align: left;
-  font-size: 1rem;
-}
-
 .resources-card {
   background: rgba(249, 253, 253, 0.98);
+}
+
+.official-resources-card {
+  grid-area: official-resources;
+}
+
+.unofficial-resources-card {
+  grid-area: unofficial-resources;
+}
+
+.resource-groups {
+  display: grid;
+  gap: 1.35rem;
+  margin-top: 1.25rem;
+}
+
+.resource-group h3 {
+  margin: 0 0 0.75rem;
+  color: var(--teal-dark);
+  font-size: 1.05rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.resource-group .resource-list {
+  margin-top: 0;
 }
 
 .resource-list {
@@ -378,6 +374,14 @@ h2 span {
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
+}
+
+.resource-initials {
+  color: var(--teal-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
 }
 
 .resource-logo img {
@@ -438,7 +442,8 @@ h2 span {
     grid-template-areas:
       "score"
       "fitb"
-      "resources";
+      "official-resources"
+      "unofficial-resources";
   }
 }
 
@@ -499,10 +504,6 @@ h2 span {
     font-size: 1.08rem;
   }
 
-  .fitb-content {
-    grid-template-columns: 1fr;
-  }
-
   .resources-card h2 {
     font-size: 1.55rem;
   }
@@ -522,6 +523,10 @@ h2 span {
   .resource-logo {
     width: 42px;
     height: 42px;
+  }
+
+  .resource-initials {
+    font-size: 0.68rem;
   }
 
   .resource-list strong {
