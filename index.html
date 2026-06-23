@@ -17,7 +17,10 @@
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="/" aria-label="PBEfocus.com home">
-          <img src="assets/pbefocus-logo.png" alt="PBEfocus.com">
+          <picture>
+            <source srcset="assets/pbefocus-logo-dark.png" media="(prefers-color-scheme: dark)">
+            <img src="assets/pbefocus-logo.png" alt="PBEfocus.com">
+          </picture>
         </a>
         <nav class="primary-nav" aria-label="Primary navigation">
           <a class="active" href="/">Home</a>
@@ -63,11 +66,14 @@
               <span></span><span></span><span></span>
             </div>
             <a href="https://pbe-scores.wooleys.us">
-            <img
-              class="tool-screenshot score-screenshot"
-              src="assets/score-keeper-screenshot.png"
-              alt="PBE Score Keeper live interface showing question scoring controls."
-            >
+            <picture>
+              <source srcset="assets/score-keeper-screenshot-dark.png" media="(prefers-color-scheme: dark)">
+              <img
+                class="tool-screenshot score-screenshot"
+                src="assets/score-keeper-screenshot.png"
+                alt="PBE Score Keeper live interface showing question scoring controls."
+              >
+            </picture>
             </a>
           </div>
           <ul class="feature-list">

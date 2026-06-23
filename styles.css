@@ -9,6 +9,7 @@
   --line: #b8d5d5;
   --shadow: 0 10px 22px rgba(6, 40, 49, 0.18);
   --soft-shadow: 0 5px 12px rgba(6, 40, 49, 0.16);
+  color-scheme: light dark;
 }
 
 * {
@@ -410,6 +411,105 @@ h2 span {
 
 .site-footer p {
   margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #a0d8ef;
+    --navy: #2e7f91;
+    --teal: #63c7cf;
+    --teal-dark: #3ca8b2;
+    --teal-soft: #0f2b34;
+    --teal-wash: #0b2129;
+    --paper: #091117;
+    --line: #294a53;
+    --shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+    --soft-shadow: 0 8px 18px rgba(0, 0, 0, 0.36);
+  }
+
+  html {
+    background: #060c10;
+  }
+
+  body {
+    background: linear-gradient(180deg, #0a1319 0%, #091117 100%);
+  }
+
+  .site-header {
+    background: rgba(7, 16, 22, 0.94);
+    border-bottom: 1px solid rgba(99, 199, 207, 0.2);
+  }
+
+  .primary-nav a:hover,
+  .primary-nav a:focus-visible,
+  .primary-nav .active {
+    background: #17343e;
+  }
+
+  .hero {
+    background: #0f2a33;
+  }
+
+  .hero-overlay {
+    background:
+      linear-gradient(90deg, rgba(8, 28, 36, 0.84), rgba(8, 28, 36, 0.7) 52%, rgba(8, 28, 36, 0.5)),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.38));
+  }
+
+  .mission-statement {
+    border: 1px solid var(--line);
+    background: rgba(9, 23, 30, 0.94);
+  }
+
+  .mission-statement h1,
+  h1,
+  h2 {
+    color: #a0d8ef;
+  }
+
+  .mission-statement p,
+  h1 + p,
+  h2 + p {
+    color: #a0d8ef;
+  }
+
+  .feature-card {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(9, 25, 32, 0.96), rgba(10, 29, 35, 0.95));
+  }
+
+  .resources-card {
+    background: rgba(10, 27, 33, 0.97);
+  }
+
+  .ui-window {
+    border: 1px solid #2f4e57;
+    background: #0d1f28;
+  }
+
+  .screenshot-window,
+  .resource-logo {
+    background: #0a1921;
+  }
+
+  .window-bar {
+    background: #122833;
+    border-bottom: 1px solid #2d4b54;
+  }
+
+  .resource-list span:not(.resource-logo),
+  .site-footer {
+    color: #a0d8ef;
+  }
+
+  .site-footer {
+    border-top: 1px solid #29454e;
+  }
+
+  .launch-link:hover,
+  .launch-link:focus-visible {
+    outline: 3px solid rgba(99, 199, 207, 0.32);
+  }
 }
 
 @media (max-width: 940px) {
