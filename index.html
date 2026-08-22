@@ -12,7 +12,9 @@
     <link rel="icon" type="image/png" href="assets/favicon-512.png" sizes="512x512">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
+    <meta name="pbe-site" content="pbefocus">
     <script src="/rogue-sheep.js" defer></script>
+    <script src="/site-nav.js" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -24,10 +26,9 @@
           </picture>
         </a>
         <nav class="primary-nav" aria-label="Primary navigation">
-          <a class="active" href="/">Home</a>
-          <a href="https://quiz.pbefocus.com">Quiz Builder</a>
-          <a href="https://pbe-scores.wooleys.us">Score Keeper</a>
-          <a href="https://pbe.wooleys.us/">Fill-In-The-Blank</a>
+          <span data-pbe-site-nav style="display:contents">
+            <a class="active" href="/">Home</a>
+          </span>
           <a href="https://github.com/antgiant/pbefocus.com/discussions">Discussion</a>
         </nav>
       </div>
@@ -338,8 +339,9 @@
 
     <footer class="site-footer">
       <nav aria-label="Footer navigation">
-        <a href="https://pbe-scores.wooleys.us">Score Keeper</a>
-        <a href="https://pbe.wooleys.us/">Fill-In-The-Blank</a>
+        <span data-pbe-site-footer-nav style="display:contents">
+          <a class="active" href="/">PBEfocus.com</a>
+        </span>
         <a href="https://github.com/antgiant/pbefocus.com/discussions">Discussion</a>
       </nav>
       <p>&copy; PBE Focus. All rights reserved.</p>
