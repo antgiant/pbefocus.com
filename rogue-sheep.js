@@ -39,8 +39,9 @@
     ".rogue-sheep-toggle{display:inline-flex;align-items:center;gap:.35em;font-size:1rem;line-height:1;background:none;border:none;padding:0;cursor:pointer;color:inherit;opacity:.55;filter:grayscale(1);transition:opacity .15s ease,filter .15s ease;}" +
     ".rogue-sheep-toggle:hover{opacity:.85;}" +
     '.rogue-sheep-toggle[aria-pressed="true"]{opacity:1;filter:none;}' +
-    ".rogue-sheep-toggle .rogue-sheep-toggle-dot{width:.4em;height:.4em;border-radius:50%;background:currentColor;opacity:.35;}" +
-    '.rogue-sheep-toggle[aria-pressed="true"] .rogue-sheep-toggle-dot{background:#2ecc71;opacity:1;box-shadow:0 0 4px #2ecc71;}' +
+    ".rogue-sheep-toggle .rogue-sheep-toggle-status{font-size:.8em;display:none;}" +
+    '.rogue-sheep-toggle[aria-pressed="false"] .rogue-sheep-toggle-status-off{display:inline;}' +
+    '.rogue-sheep-toggle[aria-pressed="true"] .rogue-sheep-toggle-status-on{display:inline;}' +
     ".rogue-sheep{position:fixed;font-size:32px;z-index:9999;pointer-events:none;transition:transform .1s ease;}" +
     ".rogue-sheep.flipped{transform:scaleX(-1);}" +
     ".rogue-sheep.black-sheep{filter:brightness(.2) saturate(.5);}" +
@@ -1919,13 +1920,16 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "rogue-sheep-toggle";
-    btn.innerHTML = '<span aria-hidden="true">🐑</span><span class="rogue-sheep-toggle-dot" aria-hidden="true"></span>';
+    btn.innerHTML =
+      '<span class="rogue-sheep-toggle-status rogue-sheep-toggle-status-off" aria-hidden="true">💤</span>' +
+      '<span aria-hidden="true">🐑</span>' +
+      '<span class="rogue-sheep-toggle-status rogue-sheep-toggle-status-on" aria-hidden="true">💨</span>';
 
     function sync() {
       var on = isEnabled();
       btn.setAttribute("aria-pressed", String(on));
       btn.setAttribute("aria-label", "Rogue Sheep easter egg: " + (on ? "on" : "off") + " — click to toggle");
-      btn.title = "Toggle Rogue Sheep — a wandering sheep easter egg";
+      btn.title = "Toggle Rogue Sheep";
     }
     sync();
 
