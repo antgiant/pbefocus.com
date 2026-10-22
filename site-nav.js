@@ -15,7 +15,7 @@
 
   var SITES = [
     { id: "pbefocus", homeLabel: "Home", footerLabel: "PBEfocus.com", url: "https://pbefocus.com", live: true },
-    { id: "quiz", homeLabel: "Quiz Builder", footerLabel: "Quiz Builder", url: "https://quiz.pbefocus.com", live: false },
+    { id: "quiz", homeLabel: "Quiz Builder", footerLabel: "Quiz Builder", url: "https://quiz.pbefocus.com", live: true },
     { id: "karaoke", homeLabel: "Karaoke", footerLabel: "Karaoke", url: "https://karaoke.pbefocus.com", live: false },
     { id: "scores", homeLabel: "Score Keeper", footerLabel: "Score Keeper", url: "https://pbe-scores.wooleys.us", live: true },
     { id: "fitb", homeLabel: "Fill-In-The-Blank", footerLabel: "Fill-In-The-Blank", url: "https://pbe.wooleys.us/", live: true },
