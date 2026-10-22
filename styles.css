@@ -230,6 +230,10 @@ h2 span {
   aspect-ratio: 16 / 10;
 }
 
+.quiz-screenshot {
+  aspect-ratio: 16 / 10;
+}
+
 .fitb-screenshot {
   aspect-ratio: 16 / 10;
   object-position: top center;
