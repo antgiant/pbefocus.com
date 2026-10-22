@@ -150,6 +150,7 @@ a {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
     "score fitb"
+    "quiz quiz"
     "official-resources official-resources"
     "unofficial-resources unofficial-resources";
   gap: 1.35rem;
@@ -172,6 +173,10 @@ a {
 
 .fitb-card {
   grid-area: fitb;
+}
+
+.quiz-card {
+  grid-area: quiz;
 }
 
 .card-heading {
@@ -542,6 +547,7 @@ h2 span {
     grid-template-areas:
       "score"
       "fitb"
+      "quiz"
       "official-resources"
       "unofficial-resources";
   }
