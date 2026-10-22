@@ -8,6 +8,9 @@ Every pbefocus.com app (Karaoke, Quiz, Score Keeper, and later others) works wit
 **opt-in upgrade to cloud storage** (Google Drive and Microsoft OneDrive first, other providers later). Signing in or out on one
 app signs the person in or out on all of them. All of this runs on **GitHub Pages only**: no Fly server, no other backend.
 
+**Cross-person sharing is a requirement for every app, and the priority use case is Karaoke** (decided by the owner
+2026-10-22). It is designed in section 3.8 and is part of Phase 1, not a later add-on.
+
 Rollout order, fixed by the owner:
 
 1. **Phase 1: Karaoke**
@@ -86,8 +89,11 @@ pbe-storage/
   ui/          account-widget.js (connect, status, reconnect, sign out, sync now), strings.js (i18n hook)
 ```
 
-Provider interface (small; a subset of StepUp's, no folder browsing): `ensureRoot()`, `list(ns)`, `read(ns, name)`,
+Provider interface (small; a subset of StepUp's, no general folder browsing): `ensureRoot()`, `list(ns)`, `read(ns, name)`,
 `write(ns, name, bytes)`, `remove(ns, name)`, `status()`, plus `auth` (`restore`, `signIn`, `signOut`, `canAutoSignIn`, `autoSignIn`, `getToken`).
+Sharing adds (see 3.8): `pickFolder()` (Google Picker / OneDrive file picker), `setRoot(folderRef)`, `folderFromLink(link)`,
+`invite(folderRef, email, role)`, `members(folderRef)` and a per-folder `access()` result (`owner | editor | viewer`) so the UI and
+the sync engine know whether this account may write.
 
 ### 3.5 Cloud layout and sync algorithm
 
@@ -113,8 +119,8 @@ PBE Focus/                      (OneDrive: /Apps/PBE Focus/, created by the clie
 - **Scopes:** Google `drive.file` (non-sensitive; no verification review). A visible `PBE Focus` folder is chosen over the hidden `appdata`
   folder so people can see, back up and later share it. Microsoft `Files.ReadWrite.AppFolder` plus `offline_access`, `User.Read`.
   Feature scopes are requested **incrementally** (Karaoke's library reading keeps `Files.Read` as a separate, later request).
-- **Sharing with other people** (the Google Picker path) is **out of scope for the first three phases**; apps share data with each
-  other through the shared client. Add it later (see section 7).
+- **Sharing with other people** is in scope from Phase 1 and is designed in 3.8. The layout above is the **personal space**; shared
+  data lives in separate **shared spaces** (also folders), so a person's private data is never exposed by sharing a folder.
 
 ### 3.6 Registrations and naming (Phase 0 deliverables)
 
@@ -137,6 +143,58 @@ PBE Focus/                      (OneDrive: /Apps/PBE Focus/, created by the clie
   DNS and console entries together; verify the domain in GitHub Pages settings.
 - Do not enable cloud features when an app is **embedded** in a third-party page (Score Keeper embedding mode).
 
+### 3.8 Sharing with other people (all apps; Karaoke first)
+
+**Model.** A *space* is a cloud folder with a marker file `pbe-space.json` `{ format, app, kind, name, createdBy }`. Each person
+has one **personal space** (the `PBE Focus/` folder, 3.5) and may belong to any number of **shared spaces**, each owned by one
+app (a Karaoke "club library of playlists", a Quiz "team question sets", a Score Keeper "event"). The provider's own folder
+permissions are the access control; PBE adds no account system. Apps never put personal data (history, device-local settings,
+library links) in a shared space.
+
+**Roles.** Owner and editor can write; viewer can only read. The sync engine asks `access()` per space and runs viewers in
+**read-only mode** (download and merge only; no upload; UI says so). Editors write only their own per-device files, so sharing
+needs no extra conflict handling. **No device ever deletes another device's files** in a shared space (only its own, or snapshots it created).
+
+**Creating and joining.**
+1. Owner picks "Share" on a playlist set, quiz set or event. The app creates the shared space folder in the owner's cloud and asks the
+   provider to share it (Google: `permissions.create` on a folder the app created, allowed under `drive.file`; Microsoft: invite or
+   create link via Graph, which needs `Files.ReadWrite`). Fallback for any provider: the owner shares the folder in the provider's own
+   UI and pastes or sends the link.
+2. The app produces a **join link** `https://<app>.pbefocus.com/#join=<provider>:<folderIdOrLink>` (and QR code, reusing
+   Karaoke's existing QR code path).
+3. The recipient opens it. **Google:** under `drive.file` the app can only see a folder the user has *picked*, so the app shows
+   a short explanation and opens the Google Picker once; the grant is remembered per folder and per client. **Microsoft:** the link
+   resolves through the Graph shares API; opening a folder that belongs to someone else needs a wider scope than the app folder
+   (see Scopes below).
+4. The space appears in the recipient's app. They can leave it at any time (this only forgets the folder locally and does not delete it).
+
+**Scopes (incremental, not up-front).**
+- Default (personal space only): Google `drive.file`; Microsoft `Files.ReadWrite.AppFolder`. The consent screen stays small.
+- The first time a person joins or creates a shared space: Google adds nothing (Picker grants per-folder access under `drive.file`).
+  Microsoft **escalates to `Files.ReadWrite.All`** for that action, because the app folder scope cannot reach other people's
+  folders. Someone who never shares never sees the broader consent. Microsoft work/school tenants may require an admin to approve
+  `Files.ReadWrite.All`; the UI must say so plainly.
+- Karaoke's song **library** link (`Files.Read`, or the Google API key path) is a separate, existing consent and stays separate. A
+  shared playlist space never carries library access; Karaoke's current explicit "also share library access?" prompt in `share.js` is kept.
+
+**Karaoke (priority).** Today a playlist is shared by link or QR code as a one-shot copy (`share.js`). Cloud sharing adds a
+**shared playlist space**: a leader (or any editor) maintains playlists in a shared space and members see them appear and update;
+viewers get them read-only. A one-shot copy remains available. Members keep their own history and controls locally (personal
+space); only playlist records (selection, genre mix, takes, names) live in the shared space.
+
+**Known unknowns (Phase 0 tests, blocking):**
+- Google Picker + `drive.file`: after user B picks a folder owned by user A, can B's client **list and read files A's client
+  created** in that folder, and **write new files** there? (The owner reports this worked in another project; StepUp's own to-do
+  suggests a picked folder can look empty. Verify with the shared client and two real accounts.)
+- Does a picked grant survive across B's devices, sessions and token refreshes, and is it per client or per file?
+- Does a viewer-only share behave as read-only without errors on both providers?
+- Microsoft: does a personal-account recipient of a personal-account share work with `Files.ReadWrite.All` through MSAL in a browser, and what does a work-tenant recipient see?
+- Rate limits and latency of polling a shared folder (Drive and Graph) at 15 to 60 second intervals.
+
+If the Google result is negative, the fallback is a **link-only share** that grants read access via an "anyone with the link"
+folder and the existing API-key listing path (as Karaoke's library already does), making shared spaces read-only for Google
+recipients until a better path exists.
+
 ## 4. Phase 0: foundations (before Phase 1 ships)
 
 1. Create the Google and Microsoft "PBE Focus" registrations (3.6). Publish the Google consent screen.
@@ -145,10 +203,10 @@ PBE Focus/                      (OneDrive: /Apps/PBE Focus/, created by the clie
    helpers, sync engine, tests (`node --test`, fake `document.cookie`, fake provider). Port from StepUp rather than rewrite:
    `googleAuth.ts`, `auth.ts`, `storage/google.ts`, `storage/onedrive.ts` (reduced to the interface in 3.4).
 4. Vendoring script (`scripts/vendor-shared.mjs`) that copies a pinned build into an app and records version and hash.
-5. **Two-account test of Google `drive.file` behavior** with the shared client: a folder created by app A is visible to app B on
-   the same account (expected yes); a folder created by account X is not visible to account Y until picked (expected yes); the
-   Picker's effect on a folder's contents (StepUp's own to-do suggests a picked folder can look empty). Record the results here;
-   they decide whether cross-person sharing is feasible later.
+5. **Two-account sharing tests, blocking for Phase 1** (the list in 3.8): a folder created by app A is visible to app B on the
+   same account; a folder created by account X is not visible to account Y until picked; what the Picker exposes inside a picked
+   folder (list, read, write); viewer-only shares; Microsoft personal and work recipients with `Files.ReadWrite.All`. Record the
+   results in this file. They decide between the main sharing design and the link-only fallback.
 6. Decide and record the subdomain for Score Keeper (3.2 domain requirement) and Fill-in-the-blank.
 
 Exit: a demo page on `localhost` signs in with both providers, writes and reads a test file in `PBE Focus/`, and signs out in a
@@ -165,6 +223,7 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
 | Playlists (id, name, selection, genre mix, takes) | Synced. Per-record `updatedAt`, tombstones. |
 | History (`sectionKey` -> attempts) | Synced. Union by attempt id (add ids if `history.js` attempts lack them). |
 | `karaokeControls`, `karaokeTextScale` | Synced, last-writer-wins per key. |
+| Shared playlist spaces (3.8) | Playlist records live in a shared space; members merge them like personal playlists. Viewers are read-only. |
 | `activePlaylistId` | Per-device (not synced). |
 | `manifestUrl` (library link, can grant access to the whole private library) | **Device-local by default.** Never uploaded without an explicit choice. |
 | Audio and manifest caches | Never synced. |
@@ -179,6 +238,9 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
 3. **Replace the library's MSAL instance and client ID** (`onedrive-library.js`) with the shared auth module and the PBE Focus
    client. Keep `Files.Read` as an incremental scope for library link reading. Keep the popup flow (Karaoke is mid-playback; a redirect would interrupt audio) with a redirect fallback when popups are blocked.
 4. **Google sign-in** for storage via GIS (new for Karaoke). The existing API-key library access is unchanged and stays sign-in-free.
+4a. **Sharing (priority):** implement 3.8 for playlists: "Share this playlist set" (create space, share, join link and QR), "Join" via
+   `#join=` link with the Picker explanation, a "Shared with me" section, role-aware read-only mode, Leave, and member list.
+   Keep the existing one-shot link/QR copy and the explicit "also share library access?" prompt. Never sync `manifestUrl` into a shared space.
 5. **Account widget** in the header beside the shared site nav: Local only / Connected as X / Reconnect / Sign out / Sync now / last synced.
    First-run offers "Keep local (default)" or "Back up to Google Drive / OneDrive". No sign-in prompt appears unasked.
 6. **Cross-app cookie behavior** (3.2) wired in at startup.
@@ -194,6 +256,8 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
 - Two browsers on one Google account converge on playlists and history; the same for OneDrive.
 - Sign-out in one browser signs out the other on focus; sign-in on one is picked up by the other.
 - Karaoke's `onedrive-library.js` no longer references StepUp's client ID.
+- A leader shares a playlist set; a second person on another account joins it, sees the playlists, and (as editor) changes
+  appear for both; a viewer sees them read-only; leaving does not delete the owner's data.
 - `AI_TODO.md` / `AGENTS.md` updated; `site-nav.js` `live` flag for karaoke handled separately at go-live.
 
 ## 6. Phase 2: Quiz
@@ -207,6 +271,8 @@ Quiz has real users, so **data must survive**.
 3. **One-time local-to-cloud rule:** first connect with local data and an empty cloud uploads local. First connect with data on
    both sides merges (union of profiles by id; ties go to the newer `updatedAt`); never replaces. Show a summary and a one-click
    "download a backup first" (the app's existing export).
+4a. **Sharing:** shared **question sets / team spaces** (3.8) using the same space, join-link, role and Picker flow built in Phase 1.
+   Decide which Quiz data is shareable (selected scopes and settings, not personal profiles by default).
 4. Privacy: profiles contain people's names (possibly children's). State clearly that they go only to the person's own cloud account.
 5. Account widget, cookie protocol, service worker exclusions, tests, README/AGENTS updates, as in Phase 1.
 6. Add `quiz` origin to both registrations (Phase 0 may already have done so).
@@ -225,7 +291,12 @@ treats it as an input and lists what it must deliver. Please point me to the pla
 - Deliverable: no `fly.dev`, `herokuapp.com`, or other server dependency in `scripts/app-sync.js`, `AGENTS.md`, README, tests,
   or `server/`; room join/leave, passwords and the username-collision logic keep working; the README "Real-Time Sync Note"
   and `AGENTS.md` signaling section are rewritten.
-- Candidate approaches: serverless signaling over public relays (Trystero-style strategies); manual/QR signaling for small rooms;
+- **Reported by the Score Keeper planning session (not yet confirmed by the owner in this plan's review):** remove all real-time
+  room sync (WebRTC, y-websocket, the 30+ mode) and decommission the servers; replace it with folder-based cloud sync using shared
+  spaces (3.8): per-session folder with a `pbe-session.json` marker, each device writes only its own `c-<clientId>.yjs`, periodic
+  snapshots, a "relay mode" for events over about 20 scorers (elected devices publish merged snapshots), adaptive polling of about 15 s
+  while scoring, and never deleting other devices' files. That design fits section 3.8 and would replace the candidates below.
+- Candidate approaches (if the owner prefers to keep live rooms): serverless signaling over public relays (Trystero-style strategies); manual/QR signaling for small rooms;
   using cloud-file sync for "my own devices" so live rooms are only for multi-person events; dropping the 30+ websocket mode
   (and saying so). **The large-event mode has no serverless equivalent and is the main product decision.**
 
@@ -272,7 +343,8 @@ Exit: a session edited on two devices converges; sign-in is shared with Karaoke/
 | Google refresh limits | Hourly re-auth; silent renewal can fail when third-party cookies are blocked. | Lazy renewal, Reconnect chip, never block the app on cloud state. |
 | Microsoft refresh limits | About daily re-login. | Same pattern as StepUp (hint plus one auto attempt). |
 | Per-origin lists | Each new app edits two consoles. | Accept; revisit a hub only if painful. |
-| Google Picker / cross-person sharing | Behavior of a picked folder's contents unverified. | Phase 0 two-account test; defer sharing. |
+| Google Picker / cross-person sharing | Required for all apps (Karaoke first). Behavior of a picked folder's contents is unverified by us. | Blocking Phase 0 two-account test; link-only read fallback. |
+| Microsoft sharing scope | Reaching other people's folders needs `Files.ReadWrite.All`; work tenants may need admin approval. | Escalate incrementally, only when sharing; say so in the UI. |
 | Fly replacement | Not documented in the repo; large-event mode has no easy substitute. | Section 7.0; needs owner decision. |
 | Score Keeper origin move | Local data and PWA installs are per origin. | Section 7.1 handoff plus long-lived old site. |
 | Cookie email | Email in a first-party cookie. | Disclose; contains no credential; user can clear it by signing out. |
@@ -280,4 +352,7 @@ Exit: a session edited on two devices converges; sign-in is shared with Karaoke/
 | Karaoke library link | A synced `manifestUrl` could widen access. | Device-local by default. |
 
 Questions still open: what exactly is the planned Fly-removal design for Score Keeper; the target subdomain names for Score Keeper
-and Fill-in-the-blank; whether Fill-in-the-blank is in scope; whether cross-person sharing (Picker) is wanted in a later phase.
+and Fill-in-the-blank; whether Fill-in-the-blank is in scope. (Resolved 2026-10-22: cross-person sharing is wanted for all apps, Karaoke first.)
+New open questions from sharing: who may create a shared space (anyone, or only the person who owns the folder); whether
+Microsoft's broader `Files.ReadWrite.All` consent on sharing is acceptable; maximum members per shared space before it is better
+served by "anyone with the link" read-only access.
