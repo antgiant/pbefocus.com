@@ -16,6 +16,7 @@ const CFG = {
   },
 };
 
+const LAB_VERSION = "5 (folder names without colons)";
 const $ = (id) => document.getElementById(id);
 // Always the folder's address with a trailing slash, whether the page was opened as .../storage-lab, .../storage-lab/ or .../index.html.
 const REDIRECT_URI = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
@@ -56,7 +57,7 @@ const epochOf = (name) => { const m = /-(\d{13})\.json$/.exec(name); return m ? 
 $("info").textContent =
   `Origin to register (Google "Authorized JavaScript origins" and the API key's referrer list):\n  ${location.origin}\n` +
   `Redirect URI to register (Microsoft, platform "Single-page application"):\n  ${REDIRECT_URI}\n` +
-  `Browser: ${navigator.userAgent}\nDevice tag for test files: ${DEVICE}`;
+  `Lab version: ${LAB_VERSION}\nBrowser: ${navigator.userAgent}\nDevice tag for test files: ${DEVICE}`;
 
 // ---- polling helper --------------------------------------------------------------------------------------------
 function makePoller(label, listNames) {
