@@ -90,7 +90,7 @@ function makePoller(label, listNames) {
 // ====================================================================================================================
 // Google
 // ====================================================================================================================
-const G = { token: null, expiresAt: 0, email: null, folder: null, tokenClient: null };
+const G = { token: null, expiresAt: 0, email: null, folder: null, file: null, tokenClient: null };
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -194,6 +194,36 @@ on("g-create", async () => {
   const f = await gApi("/drive/v3/files?fields=id,name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, mimeType: "application/vnd.google-apps.folder" }) });
   gSetFolder({ id: f.id, name: f.name });
   log("Created folder in My Drive and chose it.", f);
+});
+const gSetFile = (f) => { G.file = f; $("g-file").textContent = f ? `${f.name} (${f.id})` : "none"; };
+on("g-pickfile", async () => {
+  const token = await gTok();
+  await loadPicker();
+  const p = window.google.picker;
+  const mine = new p.DocsView(p.ViewId.DOCS).setIncludeFolders(true).setMimeTypes("application/json");
+  const shared = new p.DocsView(p.ViewId.DOCS).setIncludeFolders(true).setOwnedByMe(false).setMimeTypes("application/json");
+  const picked = await new Promise((resolve) => {
+    new p.PickerBuilder().addView(mine).addView(shared).setOAuthToken(token).setDeveloperKey(CFG.google.apiKey).setAppId(CFG.google.appId)
+      .setTitle("Choose a test file")
+      .setCallback((d) => {
+        if (d.action === p.Action.PICKED && d.docs && d.docs[0]) resolve({ id: d.docs[0].id, name: d.docs[0].name });
+        else if (d.action === p.Action.CANCEL) resolve(null);
+      }).build().setVisible(true);
+  });
+  if (!picked) return log("Picker cancelled.");
+  gSetFile(picked);
+  log("Picked file.", picked);
+});
+on("g-readfile", async () => {
+  if (!G.file) throw new Error("Pick a file first.");
+  const meta = await gApi(`/drive/v3/files/${G.file.id}?fields=id,name,modifiedTime,ownedByMe,owners(emailAddress),capabilities(canEdit)&supportsAllDrives=true`);
+  const text = await gApi(`/drive/v3/files/${G.file.id}?alt=media&supportsAllDrives=true`);
+  log("Read the picked file (compare with the owner's latest update).", { meta, content: text });
+});
+on("g-updatefile", async () => {
+  if (!G.file) throw new Error("Pick a file first.");
+  const r = await gUpload(null, JSON.stringify({ updatedBy: G.email, device: DEVICE, at: new Date().toISOString() }), G.file.id);
+  log("Updated the picked file's content.", r);
 });
 on("g-useid", async () => {
   const id = $("g-id").value.trim();
