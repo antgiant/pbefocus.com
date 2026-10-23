@@ -123,6 +123,14 @@ async function gSignIn(prompt, hint) {
   G.email = about.user && about.user.emailAddress;
   $("g-state").textContent = `yes: ${G.email}`;
   log(`Google signed in as ${G.email}; token valid about ${Math.round((G.expiresAt - Date.now()) / 60000)} min.`);
+  await gShowScopes();
+}
+async function gShowScopes() {
+  try {
+    const r = await fetch("https://oauth2.googleapis.com/tokeninfo?access_token=" + encodeURIComponent(G.token));
+    const j = await r.json();
+    log("Scopes actually carried by this token:", (j.scope || "unknown").split(" "));
+  } catch (e) { log(`Could not read token scopes: ${e.message}`); }
 }
 async function gTok() {
   if (!G.token || Date.now() > G.expiresAt - 60000) throw new Error("Google token missing or expired; use Sign in or Silent token.");
@@ -160,6 +168,7 @@ async function gUpload(meta, content, existingId) {
   return gApi("/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,name,parents,modifiedTime", { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${b}` }, body });
 }
 
+on("g-scopes", async () => { await gTok(); await gShowScopes(); });
 on("g-signin", () => gSignIn(G.email ? "" : "select_account", G.email || undefined));
 on("g-switch", () => gSignIn("select_account"));
 on("g-silent", () => gSignIn("none", G.email || undefined));
