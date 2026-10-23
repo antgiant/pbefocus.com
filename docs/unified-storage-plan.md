@@ -211,7 +211,21 @@ recipients until a better path exists.
 
 ## 4. Phase 0: foundations (before Phase 1 ships)
 
-1. Create the Google and Microsoft "PBE Focus" registrations (3.6). Publish the Google consent screen.
+**Status (2026-10-23)**
+
+| Item | State |
+|---|---|
+| Google Cloud project, consent screen (published), scopes `drive.file` and `drive.appdata`, authorized origins, Picker and Drive APIs, Picker API key | **Done** (confirmed by the owner) |
+| Google OAuth client ID (public, safe to commit) | `332648473500-9b047fgob7vmt7j0nm3ut6gguumsqlur.apps.googleusercontent.com` |
+| Google project number, used as the Picker App ID (public) | `332648473500` |
+| Google Picker API key (public but referrer-restricted) | Created; value not yet recorded here. Add it to the apps' config when the shared module is built. |
+| `privacy.html` and `terms.html` | **Live** on pbefocus.com since 2026-10-23 (commit `023a77d`). Text describes planned behavior; update when the first app ships. |
+| Microsoft Entra registration | Not started |
+| Shared module (`shared/storage/`), vendoring script | Not started |
+| Two-account sharing tests (item 5) | Not started; blocking for Phase 1 |
+| Subdomain decisions for Score Keeper and Fill-in-the-blank | Open |
+
+1. Create the Google and Microsoft "PBE Focus" registrations (3.6) and publish the Google consent screen. **Google is done; Microsoft is next.**
 2. Add `privacy.html`, `terms.html` to `pbefocus.com`, covering local vs cloud storage and the cookie.
 3. Create `shared/storage/` in `pbefocus.com` with: cookie protocol, provider interface, memory provider, envelope and merge
    helpers, sync engine, tests (`node --test`, fake `document.cookie`, fake provider). Port from StepUp rather than rewrite:
