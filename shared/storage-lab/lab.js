@@ -90,7 +90,7 @@ function makePoller(label, listNames) {
 // ====================================================================================================================
 // Google
 // ====================================================================================================================
-const G = { token: null, expiresAt: 0, email: null, folder: null, file: null, tokenClient: null };
+const G = { token: null, expiresAt: 0, email: null, folder: null, file: null, files: null, tokenClient: null };
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -224,6 +224,37 @@ on("g-updatefile", async () => {
   if (!G.file) throw new Error("Pick a file first.");
   const r = await gUpload(null, JSON.stringify({ updatedBy: G.email, device: DEVICE, at: new Date().toISOString() }), G.file.id);
   log("Updated the picked file's content.", r);
+});
+on("g-pickmulti", async () => {
+  const f = gNeedFolder();
+  const token = await gTok();
+  await loadPicker();
+  const p = window.google.picker;
+  const view = new p.DocsView(p.ViewId.DOCS).setParent(f.id).setIncludeFolders(false).setMimeTypes("application/json");
+  const picked = await new Promise((resolve) => {
+    new p.PickerBuilder().addView(view).enableFeature(p.Feature.MULTISELECT_ENABLED).setOAuthToken(token).setDeveloperKey(CFG.google.apiKey).setAppId(CFG.google.appId)
+      .setTitle("Select the files in this folder")
+      .setCallback((d) => {
+        if (d.action === p.Action.PICKED && d.docs) resolve(d.docs.map((x) => ({ id: x.id, name: x.name })));
+        else if (d.action === p.Action.CANCEL) resolve(null);
+      }).build().setVisible(true);
+  });
+  if (!picked) return log("Picker cancelled.");
+  G.files = picked;
+  $("g-files").textContent = `${picked.length} files`;
+  log(`Picked ${picked.length} files from the folder.`, picked);
+});
+on("g-readall", async () => {
+  if (!G.files || !G.files.length) throw new Error("Pick files first.");
+  const out = [];
+  for (const x of G.files) {
+    try {
+      const meta = await gApi(`/drive/v3/files/${x.id}?fields=name,modifiedTime,ownedByMe,owners(emailAddress)&supportsAllDrives=true`, {}, true);
+      const content = await gApi(`/drive/v3/files/${x.id}?alt=media&supportsAllDrives=true`, {}, true);
+      out.push({ name: meta.name, owner: (meta.owners || [{}])[0].emailAddress, modified: meta.modifiedTime, content });
+    } catch (e) { out.push({ name: x.name, error: e.message }); }
+  }
+  log("Read every picked file.", out);
 });
 on("g-useid", async () => {
   const id = $("g-id").value.trim();
