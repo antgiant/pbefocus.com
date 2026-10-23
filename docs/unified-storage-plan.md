@@ -2,6 +2,14 @@
 
 Status: draft for review. Owner: antgiant. Written 2026-10-22.
 
+> **Decision 2026-10-23: Google Drive support is dropped for now; OneDrive is the only cloud provider.** The Phase 0 tests (3.9) showed
+> Google's non-restricted `drive.file` scope gives only per-file access, which makes shared folders and multi-writer sync impractical;
+> the full `drive` scope needs an annual paid security audit (the owner's experience with StepUp); and single-user Google backup alone
+> was judged not worth the cost. **Everywhere below that describes Google, treat it as deferred** and kept as a record. The provider
+> abstraction (3.4) stays so another provider can be added later (Dropbox is a candidate: PKCE with no secret and long-lived refresh
+> tokens). The Google registration, client ID and Picker key (Phase 0 status) are no longer needed and may be left idle or deleted.
+> Karaoke's existing read-only Google Drive *library* link (API key, no sign-in) is a separate feature and is not affected.
+
 ## 1. Goal
 
 Every pbefocus.com app (Karaoke, Quiz, Score Keeper, and later others) works with **local storage by default** and offers an
@@ -283,7 +291,7 @@ Google and Microsoft therefore differ, and the Google approach is the open decis
 
 | Item | State |
 |---|---|
-| Google Cloud project, consent screen (published), scopes `drive.file` and `drive.appdata`, authorized origins, Picker and Drive APIs, Picker API key | **Done** (confirmed by the owner) |
+| Google Cloud project, consent screen, scopes, authorized origins, Picker and Drive APIs, Picker API key | Done, but **no longer needed** (Google dropped 2026-10-23) |
 | Google OAuth client ID (public, safe to commit) | `332648473500-9b047fgob7vmt7j0nm3ut6gguumsqlur.apps.googleusercontent.com` |
 | Google project number, used as the Picker App ID (public) | `332648473500` |
 | Google Picker API key (public, restricted to the Picker API and the app origins) | `AIzaSyAXzux3Lbfd_fHp2efZTH7E-m5EKLZCxdg`. Goes into the apps' config when the shared module is built. |
@@ -336,7 +344,7 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
    - On a remote merge, apply to local, dispatch a `pbe:state-changed` event, and re-render affected panels (playlists, history).
 3. **Replace the library's MSAL instance and client ID** (`onedrive-library.js`) with the shared auth module and the PBE Focus
    client. Keep `Files.Read` as an incremental scope for library link reading. Keep the popup flow (Karaoke is mid-playback; a redirect would interrupt audio) with a redirect fallback when popups are blocked.
-4. **Google sign-in** for storage via GIS (new for Karaoke). The existing API-key library access is unchanged and stays sign-in-free.
+4. ~~**Google sign-in** for storage via GIS (new for Karaoke).~~ **Dropped (2026-10-23).** The existing API-key library access is unchanged and stays sign-in-free.
 4b. **Folder choice:** a first-run "Choose where to save" step (Google Picker / Microsoft folder chooser, with "create a new folder"), a
    settings page to see or change the folder, `pbe-root.json` marker, the pointer cookie and settings file (3.5), and a clear "folder
    missing, choose again" recovery. No folder is ever created without the person choosing it.
