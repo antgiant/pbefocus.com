@@ -222,6 +222,20 @@ Run with the sharing lab (`shared/storage-lab/`), accounts A and B, A on iOS Saf
 | B picks one of A's files (Picker, "Shared with me"), then reads it | **Pass.** `canEdit` true (B is an editor of the folder). |
 | A updates that file in place; B reads it again (twice) | **B sees the new content both times** (the second within about 14 s of A's write, measured at human speed). A per-file grant therefore tracks the owner's updates. |
 
+Second round (same accounts):
+
+| Test | Result |
+|---|---|
+| Listing a shared folder after picking *some* of its files | Shows only the files you created plus the ones you individually picked; other files in the folder stay invisible. |
+| A creates a **new** folder, shares it to B as editor (API), B picks the folder, A writes a file, B lists | **B sees 0 entries.** B's own write is then visible to B only; A never sees B's file. |
+| B opens the folder by ID **without** picking it first | **404 (not found).** A pick is required before the app can touch another person's folder. |
+| A (owner) changes sharing on a folder that already holds B's file | **403 `appNotAuthorizedToChild`**: "The user has not granted the app write access to the child file ... which would be affected by the operation on the parent." |
+
+The last row is new and important: once someone else has written into a shared folder, the owner's app can no longer change that
+folder's permissions through the API (and likely cannot delete, move or re-share it either), because the operation would touch files
+the app has no grant for. Share first, and treat role changes or removal as a job for Drive's own UI. "Leave" must only forget the
+folder locally.
+
 **Conclusion.** `drive.file` access is **per file and per user**: picking a *folder* grants the folder only, not its contents, and
 each person's app sees only files its own account created or explicitly picked. Folder-style multi-writer sync (everyone reads
 everyone's files by listing the folder) **does not work on Google with `drive.file`**. What does work is a per-file grant.
@@ -410,6 +424,7 @@ Exit: a session edited on two devices converges; sign-in is shared with Karaoke/
 | Per-origin lists | Each new app edits two consoles. | Accept; revisit a hub only if painful. |
 | Google Picker / cross-person sharing | Required for all apps (Karaoke first). Behavior of a picked folder's contents is unverified by us. | Blocking Phase 0 two-account test; link-only read fallback. |
 | Microsoft scope | Writing to a person-chosen folder and to shared folders needs `Files.ReadWrite.All` from first sign-in; work tenants may need admin approval. | Explain plainly in the sign-in UI and privacy page; open only the chosen folder and the app's settings; Google stays narrow. |
+| Google: owner cannot change sharing or delete a shared folder once others have written into it | `appNotAuthorizedToChild` 403 (found 2026-10-23). | Share before others write; role changes and removal happen in Drive's UI; the app only offers "Leave" (forget locally). |
 | Chosen folder disappears or is moved | Pointer breaks. | Marker file, "choose again" recovery, never delete the old folder. |
 | Fly replacement | Not documented in the repo; large-event mode has no easy substitute. | Section 7.0; needs owner decision. |
 | Score Keeper origin move | Local data and PWA installs are per origin. | Section 7.1 handoff plus long-lived old site. |
