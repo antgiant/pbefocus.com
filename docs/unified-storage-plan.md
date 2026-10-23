@@ -209,6 +209,37 @@ If the Google result is negative, the fallback is a **link-only share** that gra
 folder and the existing API-key listing path (as Karaoke's library already does), making shared spaces read-only for Google
 recipients until a better path exists.
 
+### 3.9 Phase 0 findings so far (2026-10-23, Google, two real accounts)
+
+Run with the sharing lab (`shared/storage-lab/`), accounts A and B, A on iOS Safari and B on a second browser.
+
+| Test | Result |
+|---|---|
+| Sign-in (GIS), folder create, write, list, read, delete in a folder the app created | **Pass.** Works on iOS Safari too, including the Picker. |
+| B picks A's shared folder with the Picker, then lists it | **B sees none of A's files** (0 entries), though A's file was in the folder. |
+| B writes a file into that shared folder | **Pass**; B is an editor. |
+| A lists the folder after B wrote | **A does not see B's file.** |
+| B picks one of A's files (Picker, "Shared with me"), then reads it | **Pass.** `canEdit` true (B is an editor of the folder). |
+| A updates that file in place; B reads it again (twice) | **B sees the new content both times** (the second within about 14 s of A's write, measured at human speed). A per-file grant therefore tracks the owner's updates. |
+
+**Conclusion.** `drive.file` access is **per file and per user**: picking a *folder* grants the folder only, not its contents, and
+each person's app sees only files its own account created or explicitly picked. Folder-style multi-writer sync (everyone reads
+everyone's files by listing the folder) **does not work on Google with `drive.file`**. What does work is a per-file grant.
+
+**Design consequences for Google (pending the owner's decision):**
+- *Leader to members (Karaoke's main case):* the leader keeps one stable file (or a few) in the shared space and updates it in place;
+  each member picks it once, and the grant persists. Members read only. The "anyone with the link" read path with an API key
+  (as Karaoke's library already uses) also works for read-only and needs no pick.
+- *Several writers (Score Keeper events, shared Quiz sets):* every writer needs a **stable per-person file** (updated in place, not a
+  new file per device or snapshot), and every reader must pick each writer's file once. Use the Picker's multi-select with the
+  shared folder as its starting folder (lab button "Pick several files in the chosen folder", to be tested) so a new member
+  selects all files at once. Each newly joined writer needs everyone else to pick again; "relay mode" reduces this to the few relay
+  devices. State-based Yjs full uploads make last-writer-wins on a person's file safe.
+- *Alternative:* request the restricted `drive` scope (full folder visibility) at the cost of Google verification, a much broader
+  consent screen, and rewriting the privacy page. Not recommended unless per-file picking proves unworkable.
+
+Microsoft has no such restriction and still needs the same tests (M1 to M10 in `sharing-tests.md`).
+
 ## 4. Phase 0: foundations (before Phase 1 ships)
 
 **Status (2026-10-23)**
