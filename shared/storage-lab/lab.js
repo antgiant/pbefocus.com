@@ -17,6 +17,8 @@ const CFG = {
 };
 
 const $ = (id) => document.getElementById(id);
+// Always the folder's address with a trailing slash, whether the page was opened as .../storage-lab, .../storage-lab/ or .../index.html.
+const REDIRECT_URI = location.origin + location.pathname.replace(/index\.html$/, "").replace(/\/?$/, "/");
 const DEVICE = (() => {
   try {
     let d = sessionStorage.getItem("lab.device");
@@ -53,7 +55,7 @@ const epochOf = (name) => { const m = /-(\d{13})\.json$/.exec(name); return m ? 
 
 $("info").textContent =
   `Origin to register (Google "Authorized JavaScript origins" and the API key's referrer list):\n  ${location.origin}\n` +
-  `Redirect URI to register (Microsoft, platform "Single-page application"):\n  ${location.origin}${location.pathname}\n` +
+  `Redirect URI to register (Microsoft, platform "Single-page application"):\n  ${REDIRECT_URI}\n` +
   `Browser: ${navigator.userAgent}\nDevice tag for test files: ${DEVICE}`;
 
 // ---- polling helper --------------------------------------------------------------------------------------------
@@ -337,7 +339,7 @@ const GRAPH = "https://graph.microsoft.com/v1.0";
 async function mInit() {
   if (!window.msal) { log("Microsoft sign-in library did not load."); return; }
   M.pca = new window.msal.PublicClientApplication({
-    auth: { clientId: CFG.microsoft.clientId, authority: CFG.microsoft.authority, redirectUri: location.origin + location.pathname },
+    auth: { clientId: CFG.microsoft.clientId, authority: CFG.microsoft.authority, redirectUri: REDIRECT_URI },
     cache: { cacheLocation: "localStorage" },
   });
   await M.pca.initialize();
