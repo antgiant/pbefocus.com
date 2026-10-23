@@ -162,6 +162,13 @@ however they like.
 
 ### 3.8 Sharing with other people (all apps; Karaoke first)
 
+**Provider differences (from the Phase 0 tests, 3.9).** Microsoft (`Files.ReadWrite.All`) supports full folder sharing: join by link, list
+everyone's files, no per-file picks. Google (`drive.file`) supports only **per-file** access: a person's app sees files its own account created
+plus files picked one by one, and the owner cannot change sharing after others have written into a folder. The sharing model below is
+written for Microsoft; on Google the same space concept applies with these changes: (a) each writer keeps one stable file per space that is updated
+in place, (b) readers pick each writer's file once (Picker multi-select starting in the shared folder, to be validated), (c) a leader-to-members
+space needs a single file and one pick per member, and (d) read-only distribution can also use "anyone with the link" with an API key.
+
 **Model.** A *space* is a cloud folder with a marker file `pbe-space.json` `{ format, app, kind, name, createdBy }`. Each person
 has one **personal space** (their chosen root folder, 3.5) and may belong to any number of **shared spaces**, each owned by one
 app (a Karaoke "club library of playlists", a Quiz "team question sets", a Score Keeper "event"). The provider's own folder
@@ -196,16 +203,16 @@ needs no extra conflict handling. **No device ever deletes another device's file
 viewers get them read-only. A one-shot copy remains available. Members keep their own history and controls locally (personal
 space); only playlist records (selection, genre mix, takes, names) live in the shared space.
 
-**Known unknowns (Phase 0 tests, blocking):**
-- Google Picker + `drive.file`: after user B picks a folder owned by user A, can B's client **list and read files A's client
-  created** in that folder, and **write new files** there? (The owner reports this worked in another project; StepUp's own to-do
-  suggests a picked folder can look empty. Verify with the shared client and two real accounts.)
+**Known unknowns (Phase 0 tests). Resolved items are marked; see 3.9 for the data.**
+- **Resolved (no):** after B picks a folder owned by A, B's app lists none of A's files; B can write, A cannot see B's files. The owner's
+  earlier StepUp result most likely reflected older broad grants (StepUp used the full `drive` scope before `drive.file`).
+- **Still to test:** whether the Picker's multi-select, opened inside the shared folder, lets a member pick all of its files in one visit.
 - Does a picked grant survive across B's devices, sessions and token refreshes, and is it per client or per file?
 - Does a viewer-only share behave as read-only without errors on both providers?
 - Microsoft: does a personal-account recipient of a personal-account share work with `Files.ReadWrite.All` through MSAL in a browser, and what does a work-tenant recipient see?
 - Rate limits and latency of polling a shared folder (Drive and Graph) at 15 to 60 second intervals.
 
-If the Google result is negative, the fallback is a **link-only share** that grants read access via an "anyone with the link"
+The Google result is negative for folder sharing, so the fallback is a **link-only share** that grants read access via an "anyone with the link"
 folder and the existing API-key listing path (as Karaoke's library already does), making shared spaces read-only for Google
 recipients until a better path exists.
 
@@ -249,8 +256,8 @@ everyone's files by listing the folder) **does not work on Google with `drive.fi
   shared folder as its starting folder (lab button "Pick several files in the chosen folder", to be tested) so a new member
   selects all files at once. Each newly joined writer needs everyone else to pick again; "relay mode" reduces this to the few relay
   devices. State-based Yjs full uploads make last-writer-wins on a person's file safe.
-- *Alternative:* request the restricted `drive` scope (full folder visibility) at the cost of Google verification, a much broader
-  consent screen, and rewriting the privacy page. Not recommended unless per-file picking proves unworkable.
+- *Ruled out:* the restricted `drive` scope (full folder visibility). The owner tried it with StepUp and Google required a full
+  security audit every year, with its cost. The apps stay on `drive.file` + `drive.appdata`.
 
 Microsoft has no such restriction and still needs the same tests (M1 to M10 in `sharing-tests.md`).
 
