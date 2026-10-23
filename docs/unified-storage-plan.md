@@ -218,7 +218,7 @@ recipients until a better path exists.
 | Google Cloud project, consent screen (published), scopes `drive.file` and `drive.appdata`, authorized origins, Picker and Drive APIs, Picker API key | **Done** (confirmed by the owner) |
 | Google OAuth client ID (public, safe to commit) | `332648473500-9b047fgob7vmt7j0nm3ut6gguumsqlur.apps.googleusercontent.com` |
 | Google project number, used as the Picker App ID (public) | `332648473500` |
-| Google Picker API key (public but referrer-restricted) | Created; value not yet recorded here. Add it to the apps' config when the shared module is built. |
+| Google Picker API key (public, restricted to the Picker API and the app origins) | `AIzaSyAXzux3Lbfd_fHp2efZTH7E-m5EKLZCxdg`. Goes into the apps' config when the shared module is built. |
 | `privacy.html` and `terms.html` | **Live** on pbefocus.com since 2026-10-23 (commit `023a77d`). Text describes planned behavior; update when the first app ships. |
 | Microsoft Entra registration | Not started |
 | Shared module (`shared/storage/`), vendoring script | Not started |
