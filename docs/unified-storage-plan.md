@@ -220,12 +220,14 @@ recipients until a better path exists.
 | Google project number, used as the Picker App ID (public) | `332648473500` |
 | Google Picker API key (public, restricted to the Picker API and the app origins) | `AIzaSyAXzux3Lbfd_fHp2efZTH7E-m5EKLZCxdg`. Goes into the apps' config when the shared module is built. |
 | `privacy.html` and `terms.html` | **Live** on pbefocus.com since 2026-10-23 (commit `023a77d`). Text describes planned behavior; update when the first app ships. |
-| Microsoft Entra registration | Not started |
+| Microsoft Entra registration ("PBE Focus", SPA platform, `Files.ReadWrite.All`, `User.Read`, `offline_access`) | **Done** (confirmed by the owner) |
+| Microsoft application (client) ID (public, safe to commit) | `86d550b4-029b-4b45-abf0-c8a56aa5bffe`. Authority: `https://login.microsoftonline.com/common`. |
+| Microsoft publisher-domain file | `/.well-known/microsoft-identity-association.json` on pbefocus.com (commit `394ad82` on `main`); verification confirmed by the owner. |
 | Shared module (`shared/storage/`), vendoring script | Not started |
 | Two-account sharing tests (item 5) | Not started; blocking for Phase 1 |
 | Subdomain decisions for Score Keeper and Fill-in-the-blank | Open |
 
-1. Create the Google and Microsoft "PBE Focus" registrations (3.6) and publish the Google consent screen. **Google is done; Microsoft is next.**
+1. Create the Google and Microsoft "PBE Focus" registrations (3.6) and publish the Google consent screen. **Both are done.**
 2. Add `privacy.html`, `terms.html` to `pbefocus.com`, covering local vs cloud storage and the cookie.
 3. Create `shared/storage/` in `pbefocus.com` with: cookie protocol, provider interface, memory provider, envelope and merge
    helpers, sync engine, tests (`node --test`, fake `document.cookie`, fake provider). Port from StepUp rather than rewrite:
