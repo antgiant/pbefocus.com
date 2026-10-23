@@ -201,7 +201,7 @@ on("g-pick", async () => {
   log("Picked folder.", picked);
 });
 on("g-create", async () => {
-  const name = `PBE lab ${DEVICE} ${new Date().toISOString().slice(0, 16)}`;
+  const name = `PBE lab ${DEVICE} ${new Date().toISOString().slice(0, 16).replace(":", "-")}`;
   const f = await gApi("/drive/v3/files?fields=id,name", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, mimeType: "application/vnd.google-apps.folder" }) });
   gSetFolder({ id: f.id, name: f.name });
   log("Created folder in My Drive and chose it.", f);
@@ -430,7 +430,7 @@ on("m-shared", async () => {
   }
 });
 on("m-create", async () => {
-  const name = `PBE lab ${DEVICE} ${new Date().toISOString().slice(0, 16)}`;
+  const name = `PBE lab ${DEVICE} ${new Date().toISOString().slice(0, 16).replace(":", "-")}`;
   const f = await mApi("/me/drive/root/children", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, folder: {}, "@microsoft.graph.conflictBehavior": "rename" }) });
   mSetFolder({ driveId: f.parentReference.driveId, id: f.id, name: f.name });
   log("Created folder and chose it.", { name: f.name });
