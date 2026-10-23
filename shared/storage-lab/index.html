@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>PBE storage sharing lab</title>
+  <style>
+    :root { --bg:#f4f8f8; --surface:#fff; --fg:#071d26; --muted:#4f6670; --line:#b8d5d5; --accent:#0f6370; --ok:#1a7f37; --bad:#b3261e; color-scheme: light dark; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#0b1417; --surface:#121e22; --fg:#e6f0f1; --muted:#9db4ba; --line:#264048; --accent:#6fc3cf; --ok:#4cc26a; --bad:#ff8a80; } }
+    * { box-sizing: border-box; }
+    body { margin: 0 auto; padding: 16px; max-width: 1100px; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    h1 { font-size: 1.4rem; margin: 8px 0; }
+    h2 { font-size: 1.05rem; margin: 0 0 8px; }
+    h3 { font-size: .95rem; margin: 14px 0 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+    .note { color: var(--muted); font-size: .9rem; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+    button { font: inherit; padding: 5px 10px; border: 1px solid var(--accent); border-radius: 6px; background: transparent; color: var(--accent); cursor: pointer; }
+    button:hover { background: var(--accent); color: var(--surface); }
+    input, select { font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); }
+    input[type=text], input[type=email] { min-width: 14rem; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; }
+    #info { white-space: pre-wrap; }
+    #log { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; height: 340px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    .state { font-weight: 600; }
+    .browser button { display: block; width: 100%; text-align: left; margin: 2px 0; }
+    .ok { color: var(--ok); } .bad { color: var(--bad); }
+  </style>
+</head>
+<body>
+  <h1>PBE storage sharing lab</h1>
+  <p class="note">Temporary test page for the unified-storage plan (Phase 0, item 5). It signs in with the PBE Focus Google and Microsoft apps and tests choosing, writing to, and sharing a folder. It stores nothing except sign-in sessions in this browser. Run each test with two accounts (A and B) and paste the log back.</p>
+  <div class="card"><pre id="info"></pre></div>
+
+  <div class="grid" style="margin-top:16px">
+    <section class="card" id="google">
+      <h2>Google Drive (<code>drive.file</code> + <code>drive.appdata</code>)</h2>
+      <div class="row"><span>Signed in: <span class="state" id="g-state">no</span></span></div>
+      <div class="row">
+        <button id="g-signin">Sign in</button>
+        <button id="g-switch">Sign in as another account</button>
+        <button id="g-signout">Sign out</button>
+        <button id="g-silent">Silent token (prompt: none)</button>
+      </div>
+      <h3>Choose a folder</h3>
+      <div class="row">
+        <button id="g-pick">Pick a folder (Google Picker)</button>
+        <button id="g-create">Create a test folder in My Drive</button>
+      </div>
+      <div class="row">
+        <input type="text" id="g-id" placeholder="folder ID (to test access without picking)">
+        <button id="g-useid">Use folder ID</button>
+      </div>
+      <div class="row note">Chosen folder: <code id="g-folder">none</code></div>
+      <h3>Use the chosen folder</h3>
+      <div class="row">
+        <button id="g-caps">Folder details / my rights</button>
+        <button id="g-list">List folder</button>
+        <button id="g-write">Write a test file</button>
+        <button id="g-read">Read newest test file</button>
+        <button id="g-cleanup">Delete my test files</button>
+      </div>
+      <h3>Share the chosen folder (it must have been created by this app)</h3>
+      <div class="row">
+        <input type="email" id="g-email" placeholder="other account's email">
+        <select id="g-role"><option value="writer">editor (writer)</option><option value="reader">viewer (reader)</option></select>
+        <button id="g-share">Share</button>
+      </div>
+      <h3>Settings pointer (appdata)</h3>
+      <div class="row">
+        <button id="g-app-write">Write pointer</button>
+        <button id="g-app-read">Read pointer</button>
+      </div>
+      <h3>Polling</h3>
+      <div class="row">
+        <button id="g-poll">Poll folder every 15 s for 3 min</button>
+        <button id="g-poll-stop">Stop</button>
+      </div>
+    </section>
+
+    <section class="card" id="microsoft">
+      <h2>Microsoft OneDrive (<code>Files.ReadWrite.All</code>)</h2>
+      <div class="row"><span>Signed in: <span class="state" id="m-state">no</span></span></div>
+      <div class="row">
+        <button id="m-signin">Sign in</button>
+        <button id="m-signout">Sign out</button>
+        <button id="m-silent">Silent token</button>
+      </div>
+      <h3>Choose a folder</h3>
+      <div class="row">
+        <button id="m-browse">Browse My files</button>
+        <button id="m-shared">Shared with me (Graph list)</button>
+        <button id="m-create">Create a test folder</button>
+      </div>
+      <div class="row">
+        <input type="text" id="m-link" placeholder="paste a OneDrive sharing link">
+        <button id="m-resolve">Use link</button>
+      </div>
+      <div class="browser" id="m-browser"></div>
+      <div class="row note">Chosen folder: <code id="m-folder">none</code></div>
+      <h3>Use the chosen folder</h3>
+      <div class="row">
+        <button id="m-list">List folder</button>
+        <button id="m-write">Write a test file</button>
+        <button id="m-read">Read newest test file</button>
+        <button id="m-cleanup">Delete my test files</button>
+      </div>
+      <h3>Share the chosen folder</h3>
+      <div class="row">
+        <input type="email" id="m-email" placeholder="other account's email">
+        <select id="m-role"><option value="write">editor</option><option value="read">viewer</option></select>
+        <button id="m-invite">Invite</button>
+      </div>
+      <div class="row">
+        <select id="m-linktype"><option value="edit">edit link</option><option value="view">view link</option></select>
+        <select id="m-linkscope"><option value="anonymous">anyone with the link</option><option value="organization">my organization</option></select>
+        <button id="m-createlink">Create link</button>
+      </div>
+      <h3>Settings pointer (app folder)</h3>
+      <div class="row">
+        <button id="m-app-write">Write pointer</button>
+        <button id="m-app-read">Read pointer</button>
+      </div>
+      <h3>Polling</h3>
+      <div class="row">
+        <button id="m-poll">Poll folder every 15 s for 3 min</button>
+        <button id="m-poll-stop">Stop</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="row" style="margin-top:16px">
+    <button id="log-copy">Copy log</button>
+    <button id="log-clear">Clear log</button>
+    <span class="note">The log never includes access tokens.</span>
+  </div>
+  <div id="log" role="log" aria-live="polite"></div>
+
+  <script src="vendor/msal-browser.min.js"></script>
+  <script type="module" src="lab.js"></script>
+</body>
+</html>
