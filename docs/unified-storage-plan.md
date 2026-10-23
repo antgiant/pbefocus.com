@@ -254,6 +254,22 @@ everyone's files by listing the folder) **does not work on Google with `drive.fi
 
 Microsoft has no such restriction and still needs the same tests (M1 to M10 in `sharing-tests.md`).
 
+**Microsoft results (2026-10-23, two personal Microsoft accounts: A `antgiant@wooleys.us`, B `patty.wooley@gmail.com`; iOS Safari)**
+
+| Test | Result |
+|---|---|
+| Sign-in (MSAL redirect), session restore on reload | **Pass.** |
+| A creates a folder, writes a file, lists it | **Pass.** |
+| A invites B as editor through the Graph `invite` call (personal accounts) | **Pass**; returns a sharing link. |
+| B's "Shared with me" list | **Does not show the shared folder** (it listed an unrelated document). Unreliable, as StepUp noted; do not rely on it. |
+| B pastes the sharing link and chooses the folder | **Pass.** |
+| B lists the folder | **Pass; sees A's file** with no per-file picking. |
+| B writes a file; A lists the folder (about 20 s later) | **Pass; A sees B's file.** |
+
+**Conclusion.** With `Files.ReadWrite.All`, Microsoft supports exactly the folder-based multi-writer sync the plan describes: join by link,
+everyone lists everyone's files, no per-file picks. Not yet tested: viewer-only role, work/school accounts, the app-folder pointer, polling.
+Google and Microsoft therefore differ, and the Google approach is the open decision (see above).
+
 ## 4. Phase 0: foundations (before Phase 1 ships)
 
 **Status (2026-10-23)**
@@ -270,7 +286,7 @@ Microsoft has no such restriction and still needs the same tests (M1 to M10 in `
 | Microsoft publisher-domain file | `/.well-known/microsoft-identity-association.json` on pbefocus.com (commit `394ad82` on `main`); verification confirmed by the owner. |
 | Shared module (`shared/storage/`), vendoring script | Not started |
 | Two-account sharing tests (item 5) | Not started; blocking for Phase 1 |
-| Subdomain decisions for Score Keeper and Fill-in-the-blank | Open |
+| Subdomain for Score Keeper | `score.pbefocus.com` (already a registered Microsoft redirect URI). Fill-in-the-blank still open. |
 
 1. Create the Google and Microsoft "PBE Focus" registrations (3.6) and publish the Google consent screen. **Both are done.**
 2. Add `privacy.html`, `terms.html` to `pbefocus.com`, covering local vs cloud storage and the cookie.
