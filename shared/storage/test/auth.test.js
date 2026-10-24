@@ -220,3 +220,18 @@ test("Picker: pickFiles can start inside a folder and select several files", asy
   assert.equal(f.seen.multi, true);
   assert.deepEqual(f.seen.views[0].calls.find((c) => c[0] === "parent"), ["parent", "FOLDER"]);
 });
+
+test("Microsoft: can share an existing MSAL client, and a popup-style app never navigates for a quiet sign-in", async () => {
+  const m = fakeMsal({ accounts: [acct], ssoFails: true });
+  const shared = new m.msal.PublicClientApplication({ auth: {} });
+  const constructed = m.calls.filter((c) => c[0] === "config").length;
+  const auth = createMicrosoftAuth({ pca: shared, clientId: "cid", redirectUri: "https://x/", mode: "popup", autoRedirect: false });
+  assert.equal((await auth.restore()).name, "me@outlook.com");
+  assert.equal(m.calls.filter((c) => c[0] === "config").length, constructed); // no second client
+  await assert.rejects(auth.autoSignIn("me@outlook.com"));
+  assert.equal(m.calls.some((c) => c[0] === "redirect"), false);
+  const redirecting = createMicrosoftAuth({ pca: shared, clientId: "cid", redirectUri: "https://x/", mode: "popup", autoRedirect: true });
+  void redirecting.autoSignIn("me@outlook.com");
+  await new Promise((r) => setImmediate(r));
+  assert.equal(m.calls.at(-1)[0], "redirect");
+});
