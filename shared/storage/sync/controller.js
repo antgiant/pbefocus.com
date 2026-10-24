@@ -19,6 +19,7 @@ export class SyncController {
     this.running = false;
     this.pending = false;
     this.started = false;
+    this.current = undefined;
     this.state = { status: "idle", lastSyncedAt: undefined, lastError: undefined, failures: 0 };
   }
 
@@ -58,10 +59,19 @@ export class SyncController {
     this.onStatus(this.state);
   }
 
-  async runNow() {
-    if (this.running) { this.pending = true; return; }
+  /** Runs a round now. If one is already in flight this waits for that one (and asks for another straight after) instead of starting a second. */
+  runNow() {
+    if (this.running) {
+      this.pending = true;
+      return this.current;
+    }
     this.clear();
     this.running = true;
+    this.current = this.execute();
+    return this.current;
+  }
+
+  async execute() {
     this.setStatus({ status: "syncing" });
     let ok = false;
     try {

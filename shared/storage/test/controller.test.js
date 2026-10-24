@@ -86,3 +86,20 @@ test("status changes are reported", async () => {
   timers.next().fn(); await flush();
   assert.deepEqual(seen, ["syncing", "idle"]);
 });
+
+test("runNow during a run waits for that run instead of starting another", async () => {
+  const timers = fakeTimers();
+  let release; let runs = 0;
+  const c = new SyncController({ run: () => { runs++; return new Promise((r) => { release = r; }); }, timers });
+  c.start();
+  const first = c.runNow();
+  let secondDone = false;
+  const second = c.runNow().then(() => { secondDone = true; });
+  await flush();
+  assert.equal(secondDone, false);
+  assert.equal(runs, 1);
+  release();
+  await Promise.all([first, second]);
+  assert.equal(secondDone, true);
+  assert.equal(c.state.status, "idle");
+});
