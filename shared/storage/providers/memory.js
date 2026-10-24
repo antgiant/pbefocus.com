@@ -34,13 +34,15 @@ export class MemoryBackend {
   }
 
   /** @returns {MemoryProvider} */
-  createProvider(userId, { visibility = "all" } = {}) {
-    return new MemoryProvider(this, userId, visibility);
+  createProvider(userId, { visibility = "all", name = "memory" } = {}) {
+    return new MemoryProvider(this, userId, visibility, name);
   }
 }
 
 export class MemoryProvider {
-  constructor(backend, userId, visibility) {
+  /** `name` is the provider id stamped on the folder references it hands out (tests use "microsoft" or "google" to stand in for them). */
+  constructor(backend, userId, visibility, name = "memory") {
+    this.name = name;
     this.kind = "memory";
     this.label = "Memory";
     this.backend = backend;
@@ -58,7 +60,7 @@ export class MemoryProvider {
     this.backend.maybeFail();
     const id = this.backend.nextId();
     this.backend.nodes.set(id, { id, name, parent: null, folder: true, owner: this.userId, grants: new Map(), tag: "v1", modified: this.backend.tick() });
-    return { provider: "memory", id, name };
+    return { provider: this.name, id, name };
   }
 
   /** Gives another person access to a folder. */
@@ -114,11 +116,11 @@ export class MemoryProvider {
     this.backend.maybeFail();
     const p = this.node(parent.id);
     const existing = [...this.backend.nodes.values()].find((n) => n.parent === p.id && n.folder && n.name === name);
-    if (existing) return { provider: "memory", id: existing.id, name };
+    if (existing) return { provider: this.name, id: existing.id, name };
     if (!["owner", "editor"].includes(this.roleOn(p))) throw new StorageError(ErrorKind.forbidden, "Read-only folder", { status: 403 });
     const id = this.backend.nextId();
     this.backend.nodes.set(id, { id, name, parent: p.id, folder: true, owner: this.userId, grants: new Map(), tag: "v1", modified: this.backend.tick() });
-    return { provider: "memory", id, name };
+    return { provider: this.name, id, name };
   }
 
   async read(folder, entry) {

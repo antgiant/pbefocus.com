@@ -96,3 +96,11 @@ test("the settings pointer is private to each person", async () => {
   assert.deepEqual(await a.readPointer(), { folder: { id: "m1" } });
   assert.equal(await b.readPointer(), undefined);
 });
+
+test("folder references carry the provider name the provider was given", async () => {
+  const cloud = new MemoryBackend();
+  const a = cloud.createProvider("a", { name: "microsoft" });
+  const root = await a.createRoot("space");
+  assert.equal(root.provider, "microsoft");
+  assert.equal((await a.ensureFolder(root, "karaoke")).provider, "microsoft");
+});
