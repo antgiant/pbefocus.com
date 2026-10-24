@@ -1,0 +1,7 @@
+{
+  "name": "pbe-storage",
+  "version": "0.1.0",
+  "description": "Local-first storage with optional OneDrive and Google Drive sync, shared by the pbefocus.com apps.",
+  "type": "module",
+  "private": true
+}

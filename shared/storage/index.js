@@ -1,0 +1,8 @@
+export { StorageError, ErrorKind, kindForStatus } from "./errors.js";
+export { COOKIE_NAME, COOKIE_VERSION, PROVIDERS, CookieStore, emptyState, normalize, parse, serialize, connect, disconnect, signOutAll, setPrimary, setFolder, reconcile, readCookieValue } from "./cookie.js";
+export { FORMAT, EnvelopeError, stableStringify, makeEnvelope, encodeEnvelope, decodeEnvelope, getDeviceId } from "./envelope.js";
+export { mergeRecords, mergeStamped, mergeStampedMap, unionBy, pruneTombstones } from "./merge.js";
+export { DocSync } from "./sync/engine.js";
+export { SyncController, attachBrowserHooks } from "./sync/controller.js";
+export { ConnectionRegistry, memoryStore } from "./registry.js";
+export { MemoryBackend, MemoryProvider } from "./providers/memory.js";
