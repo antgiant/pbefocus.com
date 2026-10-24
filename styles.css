@@ -149,7 +149,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
-    "score fitb"
+    "score score"
     "quiz quiz"
     "official-resources official-resources"
     "unofficial-resources unofficial-resources";
@@ -169,10 +169,6 @@ a {
 
 .score-card {
   grid-area: score;
-}
-
-.fitb-card {
-  grid-area: fitb;
 }
 
 .quiz-card {
@@ -232,11 +228,6 @@ h2 span {
 
 .quiz-screenshot {
   aspect-ratio: 16 / 10;
-}
-
-.fitb-screenshot {
-  aspect-ratio: 16 / 10;
-  object-position: top center;
 }
 
 .window-bar {
@@ -550,7 +541,6 @@ h2 span {
     grid-template-columns: 1fr;
     grid-template-areas:
       "score"
-      "fitb"
       "quiz"
       "official-resources"
       "unofficial-resources";
