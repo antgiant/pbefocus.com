@@ -32,7 +32,6 @@ Rollout order, fixed by the owner:
 | Karaoke (`karaoke.pbefocus.com`) | One JSON blob in `localStorage` key `pbe-karaoke:v1` (`assets/js/storage.js`, `loadState`/`saveState`, synchronous). | **Read-only song library** from a OneDrive folder link (MSAL, scope `Files.Read`, `offline/onedrive-library.js`) or a Google Drive link (API key, no sign-in, `offline/googledrive-library.js`). Not used for user data. | Pre-release: `AI_TODO.md` says freely break stored state, no migrations. Uses MSAL popup flow. Reuses StepUp's Azure client ID `1b28096c-...`. No build step; vendored `msal-browser.min.js`. Offline-first (service worker plus Cache Storage). |
 | Quiz (`quiz.pbefocus.com`) | `localStorage`: profiles/settings blob (`assets/js/storage.js`) plus per-profile preference keys (`main.js` around line 928). | None. | Live (`live: true` in `site-nav.js`), so **real users have data to preserve**. No build step. |
 | Score Keeper (`pbe-scores.wooleys.us`) | Multi-doc Yjs in IndexedDB (`pbe-score-keeper-global`, `pbe-score-keeper-session-{id}`). `.yjs` export/import. | None. Real-time rooms use y-webrtc with signaling and a y-websocket mode on Fly (`wss://y-webrtc-pbe.fly.dev`), plus two dead or unreliable public backups. | **Lives on `wooleys.us`, not `pbefocus.com`.** Classic scripts, a Yjs bundle built with esbuild, i18n in 4 languages, version-bump rule, README states "not shared with any server". |
-| Fill-in-the-blank | Not examined. | | Also on `pbe.wooleys.us`. |
 | `pbefocus.com` root | Static site; serves shared `site-nav.js` consumed by the other apps. | | Whole repo is deployed to Pages (`path: '.'`), so a `shared/` directory is served for free. |
 
 Existing registrations: the Microsoft client ID in Karaoke is **StepUp's** ("Step Up Helper"), and the Google API key belongs to
@@ -336,7 +335,7 @@ The provider interface (3.4) stays unchanged except that a space reference carri
 | Microsoft publisher-domain file | `/.well-known/microsoft-identity-association.json` on pbefocus.com (commit `394ad82` on `main`); verification confirmed by the owner. |
 | Shared module (`shared/storage/`), vendoring script | Not started |
 | Two-account sharing tests (item 5) | Not started; blocking for Phase 1 |
-| Subdomain for Score Keeper | `score.pbefocus.com` (already a registered Microsoft redirect URI). Fill-in-the-blank still open. |
+| Subdomain for Score Keeper | `score.pbefocus.com` (already a registered Microsoft redirect URI). |
 
 1. Create the Google and Microsoft "PBE Focus" registrations (3.6) and publish the Google consent screen. **Both are done.**
 2. Add `privacy.html`, `terms.html` to `pbefocus.com`, covering local vs cloud storage and the cookie.
@@ -349,7 +348,7 @@ The provider interface (3.4) stays unchanged except that a space reference carri
    folder (list, read, write); viewer-only shares; Microsoft personal and work recipients with `Files.ReadWrite.All`; and **whether a folder picked in app A is usable by app B on the
    same account without picking again** (same client, `drive.file`). Record the
    results in this file. They decide between the main sharing design and the link-only fallback.
-6. Decide and record the subdomain for Score Keeper (3.2 domain requirement) and Fill-in-the-blank.
+6. Decide and record the subdomain for Score Keeper (3.2 domain requirement).
 
 Exit: a demo page on `localhost` signs in with both providers, lets you choose (or create) a folder, writes and reads a test file in it, and signs out in a
 second tab via the cookie.
@@ -530,8 +529,8 @@ Exit: a session edited on two devices converges; sign-in is shared with Karaoke/
 | Pre-release Karaoke | Easy to change shape now, hard later. | Land the record/`updatedAt` shape in Phase 1. |
 | Karaoke library link | A synced `manifestUrl` could widen access. | Device-local by default. |
 
-Questions still open: what exactly is the planned Fly-removal design for Score Keeper; the target subdomain names for Score Keeper
-and Fill-in-the-blank; whether Fill-in-the-blank is in scope. (Resolved 2026-10-22: cross-person sharing is wanted for all apps, Karaoke first.)
+Questions still open: what exactly is the planned Fly-removal design for Score Keeper. (Resolved 2026-10-22: cross-person sharing is wanted
+for all apps, Karaoke first. Resolved 2026-10-24: Score Keeper lives at `score.pbefocus.com`.)
 New open questions from sharing: who may create a shared space (anyone, or only the person who owns the folder); whether
 Microsoft's broad `Files.ReadWrite.All` consent (needed from first sign-in for a chosen folder) is acceptable; maximum members per shared space before it is better
 served by "anyone with the link" read-only access.
