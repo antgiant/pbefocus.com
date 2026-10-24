@@ -2,13 +2,13 @@
 
 Status: draft for review. Owner: antgiant. Written 2026-10-22.
 
-> **Decision 2026-10-23: Google Drive support is dropped for now; OneDrive is the only cloud provider.** The Phase 0 tests (3.9) showed
-> Google's non-restricted `drive.file` scope gives only per-file access, which makes shared folders and multi-writer sync impractical;
-> the full `drive` scope needs an annual paid security audit (the owner's experience with StepUp); and single-user Google backup alone
-> was judged not worth the cost. **Everywhere below that describes Google, treat it as deferred** and kept as a record. The provider
-> abstraction (3.4) stays so another provider can be added later (Dropbox is a candidate: PKCE with no secret and long-lived refresh
-> tokens). The Google registration, client ID and Picker key (Phase 0 status) are no longer needed and may be left idle or deleted.
-> Karaoke's existing read-only Google Drive *library* link (API key, no sign-in) is a separate feature and is not affected.
+> **Decision log.**
+> - **2026-10-23:** Google dropped (tentatively). The Phase 0 tests (3.9) showed `drive.file` gives only per-file access, and the full `drive`
+>   scope needs an annual paid security audit (the owner's experience with StepUp).
+> - **2026-10-24: reversed. Google is kept as single-user storage, with a warning at selection** ("works for your own data on all your
+>   devices, but cannot be used for shared folders where several people write"). The owner also expects sharing to happen **across
+>   providers**, so a person must be able to be **connected to several providers at once** (section 3.10).
+> - Shared multi-writer spaces are hosted on OneDrive. Google-hosted spaces are limited to read-only distribution (3.10).
 
 ## 1. Goal
 
@@ -285,13 +285,48 @@ Microsoft has no such restriction and still needs the same tests (M1 to M10 in `
 everyone lists everyone's files, no per-file picks. Not yet tested: viewer-only role, work/school accounts, the app-folder pointer, polling.
 Google and Microsoft therefore differ, and the Google approach is the open decision (see above).
 
+### 3.10 Several providers at once, and cross-provider sharing
+
+**Concepts.**
+- **Primary storage** is where a person's own (personal-space) data lives: local only, Google Drive or OneDrive. Exactly one.
+- **Connections** are the providers a person is signed in to. A person may hold several at once (for example primary = Google, plus a
+  Microsoft connection used only to join OneDrive-hosted shared spaces).
+- A **space** records its **host provider** and folder reference. Opening a space uses that provider's connection, never the primary.
+
+**Hosting rules (from the Phase 0 tests).**
+| Space kind | Host | Who can join | Notes |
+|---|---|---|---|
+| Shared, several writers (events, team sets, co-edited playlists) | **OneDrive only** | Anyone who connects a (free) Microsoft account, whatever their primary storage | Full folder sharing works. |
+| Read-only distribution (a leader's playlists) | OneDrive, or Google via "anyone with the link" | OneDrive: needs a Microsoft connection. Google link: **no sign-in at all** (API key, as Karaoke's library already does) | Google link exposes the data to anyone with the link; say so when creating it. |
+| Personal | The primary provider | The person | Google works fine here, across all of their own devices. |
+
+**Warning shown when a person picks Google as primary:** "Google Drive works for your own data on all your devices. Because of limits Google puts
+on apps, it can't be used for shared folders where several people add data. You can still join shared folders on OneDrive by also connecting a
+Microsoft account." Offer to continue, or choose OneDrive instead.
+
+**Joining across providers.** A join link names its provider (`#join=<provider>:<ref>`). If the person has no connection to that provider, the app
+explains why and offers to connect it; their primary storage does not change. Microsoft's Graph requires a sign-in even for "anyone" links
+(Karaoke's own notes), so every member of a OneDrive-hosted space needs a Microsoft connection.
+
+**Sign-in cookie, version 2** (replaces the single-account form in 3.2):
+`{ v:2, primary:"google"|"microsoft"|"local", accounts:[{ provider, hint, folder?, at }], out:{ <provider>: <epoch ms> } }`. Each provider has its own
+connection time and sign-out marker, so signing out of Google does not sign out of Microsoft, and "Sign out of everything" writes a marker for
+all. Other apps reconcile per provider using the rules in 3.2. Size stays well under the cookie limit.
+
+**Account widget.** Lists connections (provider, account, status, Reconnect) with Connect and Disconnect for each, shows which one is primary
+and offers "Change primary storage" (copy data to the new provider; never delete the old copy), plus "Sign out of everything".
+
+**Engine and modules.** A `ConnectionRegistry` holds one connection per provider; the sync engine runs one loop per space and dispatches to the
+space's provider; `StorageProvider.auth` is per provider; a polling budget is shared across providers (15 s only while actively scoring).
+The provider interface (3.4) stays unchanged except that a space reference carries `provider`.
+
 ## 4. Phase 0: foundations (before Phase 1 ships)
 
 **Status (2026-10-23)**
 
 | Item | State |
 |---|---|
-| Google Cloud project, consent screen, scopes, authorized origins, Picker and Drive APIs, Picker API key | Done, but **no longer needed** (Google dropped 2026-10-23) |
+| Google Cloud project, consent screen (published), scopes `drive.file` and `drive.appdata`, authorized origins, Picker and Drive APIs, Picker API key | **Done** (confirmed by the owner); in use again after the 2026-10-24 decision |
 | Google OAuth client ID (public, safe to commit) | `332648473500-9b047fgob7vmt7j0nm3ut6gguumsqlur.apps.googleusercontent.com` |
 | Google project number, used as the Picker App ID (public) | `332648473500` |
 | Google Picker API key (public, restricted to the Picker API and the app origins) | `AIzaSyAXzux3Lbfd_fHp2efZTH7E-m5EKLZCxdg`. Goes into the apps' config when the shared module is built. |
@@ -344,7 +379,9 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
    - On a remote merge, apply to local, dispatch a `pbe:state-changed` event, and re-render affected panels (playlists, history).
 3. **Replace the library's MSAL instance and client ID** (`onedrive-library.js`) with the shared auth module and the PBE Focus
    client. Keep `Files.Read` as an incremental scope for library link reading. Keep the popup flow (Karaoke is mid-playback; a redirect would interrupt audio) with a redirect fallback when popups are blocked.
-4. ~~**Google sign-in** for storage via GIS (new for Karaoke).~~ **Dropped (2026-10-23).** The existing API-key library access is unchanged and stays sign-in-free.
+4. **Google sign-in** for personal storage via GIS (new for Karaoke), with the single-user warning. The existing API-key library access is unchanged and stays sign-in-free.
+4c. **Several providers at once (3.10):** connection registry, cookie v2, per-provider sign-out, a Connections panel in the account widget, the Google single-user
+   warning, and cross-provider join prompts. Google-hosted read-only spaces use the API-key path and need no Google sign-in for readers.
 4b. **Folder choice:** a first-run "Choose where to save" step (Google Picker / Microsoft folder chooser, with "create a new folder"), a
    settings page to see or change the folder, `pbe-root.json` marker, the pointer cookie and settings file (3.5), and a clear "folder
    missing, choose again" recovery. No folder is ever created without the person choosing it.
@@ -456,6 +493,8 @@ Exit: a session edited on two devices converges; sign-in is shared with Karaoke/
 | Google Picker / cross-person sharing | Required for all apps (Karaoke first). Behavior of a picked folder's contents is unverified by us. | Blocking Phase 0 two-account test; link-only read fallback. |
 | Microsoft scope | Writing to a person-chosen folder and to shared folders needs `Files.ReadWrite.All` from first sign-in; work tenants may need admin approval. | Explain plainly in the sign-in UI and privacy page; open only the chosen folder and the app's settings; Google stays narrow. |
 | Google: owner cannot change sharing or delete a shared folder once others have written into it | `appNotAuthorizedToChild` 403 (found 2026-10-23). | Share before others write; role changes and removal happen in Drive's UI; the app only offers "Leave" (forget locally). |
+| Google is single-user only | People may expect shared folders on Google. | Warning when selecting Google; OneDrive-hosted shared spaces for everything shared; Google read-only link sharing only. |
+| Every member of a shared space needs a Microsoft account | A friction for Google users. | Explain at join; free personal accounts work; revisit if a second provider (e.g. Dropbox) is added. |
 | Chosen folder disappears or is moved | Pointer breaks. | Marker file, "choose again" recovery, never delete the old folder. |
 | Fly replacement | Not documented in the repo; large-event mode has no easy substitute. | Section 7.0; needs owner decision. |
 | Score Keeper origin move | Local data and PWA installs are per origin. | Section 7.1 handoff plus long-lived old site. |
