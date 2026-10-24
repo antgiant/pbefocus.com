@@ -24,8 +24,10 @@ export class ConnectionRegistry {
    *   store?: { getItem(k: string): string | null, setItem(k: string, v: string): void, removeItem(k: string): void },
    *   now?: () => number, onChange?: () => void }} opts
    */
-  constructor({ cookie, providers, store, now = Date.now, onChange = () => {} }) {
+  constructor({ cookie, providers, store, sessionStore, now = Date.now, onChange = () => {} }) {
     this.cookie = cookie;
+    /** survives a sign-in redirect within one tab (sessionStorage), so a failed automatic sign-in cannot loop */
+    this.sessionStore = sessionStore || memoryStore();
     this.providers = providers;
     this.store = store || memoryStore();
     this.now = now;
@@ -34,7 +36,6 @@ export class ConnectionRegistry {
     this.sessions = new Map();
     /** providers whose cookie says "connected" but whose quiet sign-in did not work: the UI offers Reconnect */
     this.needsReconnect = new Set();
-    this.autoTried = new Set();
     this.instances = new Map();
   }
 
@@ -43,6 +44,13 @@ export class ConnectionRegistry {
   }
   write(key, value) {
     try { if (value === null) this.store.removeItem(key); else this.store.setItem(key, String(value)); } catch { /* storage blocked */ }
+  }
+
+  autoTried(provider) {
+    try { return this.sessionStore.getItem(`pbe.autoTried.${provider}`) === "1"; } catch { return true; } // cannot guard against a loop: never start one
+  }
+  setAutoTried(provider, on) {
+    try { if (on) this.sessionStore.setItem(`pbe.autoTried.${provider}`, "1"); else this.sessionStore.removeItem(`pbe.autoTried.${provider}`); } catch { /* ignore */ }
   }
 
   /** Call once at start-up (and after a sign-in redirect). Restores sessions, then agrees with the cookie. */
@@ -55,6 +63,7 @@ export class ConnectionRegistry {
       let at = Number(this.read(stampKey(provider)));
       if (fresh || !Number.isFinite(at) || at <= 0) { at = this.now(); this.write(stampKey(provider), at); }
       this.sessions.set(provider, { account, connectedAt: at, hint: account.name || account.id });
+      this.setAutoTried(provider, false);
       if (fresh) this.cookie.update((s, now) => connect(s, { provider, hint: account.name || account.id }, now));
     }
     if (pending) this.write(PENDING_KEY, null);
@@ -81,8 +90,9 @@ export class ConnectionRegistry {
         const s = this.sessions.get(action.provider);
         this.cookie.update((state) => connect(state, { provider: action.provider, hint: action.hint || s.account.name }, s.connectedAt));
         changed = true;
-      } else if (action.type === "signIn" && !this.autoTried.has(action.provider)) {
-        this.autoTried.add(action.provider); // one automatic attempt per page load, so a failure shows a button instead of looping
+      } else if (action.type === "signIn") {
+        if (this.autoTried(action.provider)) { this.needsReconnect.add(action.provider); changed = true; continue; }
+        this.setAutoTried(action.provider, true); // one automatic attempt, so a failure shows a button instead of looping
         let account;
         try {
           if (entry.auth.canAutoSignIn(action.hint)) account = await entry.auth.autoSignIn(action.hint);
@@ -92,6 +102,7 @@ export class ConnectionRegistry {
           this.sessions.set(action.provider, { account, connectedAt: at, hint: action.hint });
           this.write(stampKey(action.provider), at);
           this.needsReconnect.delete(action.provider);
+          this.setAutoTried(action.provider, false);
         } else {
           this.needsReconnect.add(action.provider);
         }
@@ -107,7 +118,8 @@ export class ConnectionRegistry {
     const entry = this.providers[provider];
     if (!entry) throw new Error(`Unknown provider ${provider}`);
     this.write(PENDING_KEY, provider);
-    await entry.auth.signIn();
+    this.setAutoTried(provider, false);
+    await entry.auth.signIn(this.cookie.read().accounts.find((a) => a.provider === provider)?.hint);
     // Reached only for providers that sign in without navigating (a popup).
     const account = await entry.auth.restore();
     if (!account) { this.write(PENDING_KEY, null); return undefined; }

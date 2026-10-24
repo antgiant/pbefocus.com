@@ -183,3 +183,30 @@ test("providerFor requires a connection and reuses the instance", async () => {
   await app.registry.connect("google");
   assert.equal(app.registry.providerFor("google"), app.registry.providerFor("google"));
 });
+
+test("an automatic sign-in that navigates away is not retried after the page returns without a session", async () => {
+  const b = browser();
+  const one = makeApp(b);
+  await one.registry.init();
+  b.clock.t = 2000; await one.registry.connect("microsoft");
+
+  // App two is in the same tab session (sessionStorage survives the redirect) but the redirect never produces a session.
+  const sessionStore = memoryStore();
+  const first = makeApp({ ...b, navigates: {} });
+  first.registry.sessionStore = sessionStore;
+  first.auths.microsoft.autoSignIn = async () => { first.auths.microsoft.log.push("autoSignIn"); return new Promise(() => {}); }; // navigating away
+  void first.registry.init(); // never settles: the page is navigating away
+  await new Promise((r) => setImmediate(r));
+  assert.equal(sessionStore.getItem("pbe.autoTried.microsoft"), "1");
+
+  const reloaded = makeApp({ ...b, silent: { microsoft: false } });
+  reloaded.registry.sessionStore = sessionStore;
+  await reloaded.registry.init();
+  assert.equal(reloaded.auths.microsoft.log.filter((l) => l === "autoSignIn").length, 0);
+  assert.equal(reloaded.registry.status().find((s) => s.provider === "microsoft").needsReconnect, true);
+
+  // a click on Reconnect clears the guard and signs in
+  await reloaded.registry.connect("microsoft");
+  assert.equal(reloaded.registry.isConnected("microsoft"), true);
+  assert.equal(sessionStore.getItem("pbe.autoTried.microsoft"), null);
+});
