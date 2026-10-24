@@ -1,5 +1,10 @@
 # Sharing tests (Phase 0, item 5)
 
+> **Status 2026-10-24: finished and archived.** The results are in `unified-storage-plan.md`, section 3.9. The temporary lab page was
+> removed from the live site; the last version is commit `3617097` (`git show 3617097:shared/storage-lab/lab.js`). Not run: OneDrive
+> viewer-only role (M7), work/school accounts (M9), polling (G8, M8) and the Picker multi-select (G-multi). Re-run them from
+> `localhost` by restoring the lab from that commit.
+
 These tests decide whether the sharing design in `unified-storage-plan.md` (section 3.8) works as written, or whether the
 link-only fallback is needed. They use the lab page in `shared/storage-lab/`, which signs in with the real "PBE Focus" Google
 and Microsoft apps. You need two accounts per provider (call them **A** and **B**); a work or school Microsoft account **C**
