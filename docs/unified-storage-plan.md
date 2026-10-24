@@ -407,6 +407,34 @@ Karaoke is the reference migration. Its user state is small and the app is pre-r
   appear for both; a viewer sees them read-only; leaving does not delete the owner's data.
 - `AI_TODO.md` / `AGENTS.md` updated; `site-nav.js` `live` flag for karaoke handled separately at go-live.
 
+### 5.4 Phase 1 implementation status (2026-10-24)
+
+Built and merged on the `claude/pbefocus-unified-storage-6q1unp` branches (not on `main`, not deployed):
+
+| Piece | Where | State |
+|---|---|---|
+| Shared module: cookie v2, registry, envelope, merge, sync engine and controller, OneDrive and Google providers, sign-in adapters, Picker wrapper, memory test provider | `pbefocus.com/shared/storage` | Done; 96 tests |
+| Karaoke: vendored copy plus `tools/vendor-pbe-storage.mjs` | `karaoke_pbefocus_com/assets/vendor/pbe-storage` | Done |
+| Karaoke: state to sync document and back (derived stamps, tombstones, history union) | `assets/js/cloud/sync-state.js` | Done; tested incl. two-device convergence |
+| Karaoke: sync orchestration (folder pointer, merge, skip-apply-if-edited) | `assets/js/cloud/cloud.js` | Done; tested against the in-memory provider |
+| Karaoke: Storage button and dialog, Google single-user warning, folder chooser | `storage-panel.js`, `folder-chooser.js`, `index.html` | Done; DOM-tested and seen in a real browser |
+| Karaoke: wiring (`applyExternalState`, keep playlists when cloud is on, single MSAL client on the PBE Focus registration) | `main.js`, `storage.js`, `onedrive-library.js` | Done; 276 Karaoke tests pass |
+| **Not yet done** | | |
+| Sharing spaces (4a): create, join link, roles, "Shared with me", cross-provider join | | Next |
+| Live sign-in and sync with real accounts | | **Needs the manual QA below** |
+| Publishing to `karaoke.pbefocus.com` | | After QA; remember `site-nav.js` `live` flag |
+
+**Manual QA before merging Karaoke to `main`** (needs two devices or browsers and a Microsoft and a Google account):
+1. Open Karaoke from `localhost` or a preview; it should behave exactly as before, with "Storage: this device" in the header.
+2. Storage, "Back up to OneDrive": sign in (popup), choose or create a folder. A `karaoke` folder with `state.<device>.json` should appear in it.
+3. On a second browser: open Karaoke, Storage, "Back up to OneDrive". The saved pointer should offer the same folder without asking, and playlists and history should arrive.
+4. Edit a playlist on one device; within a minute it appears on the other. Delete one; it disappears on the other.
+5. Edit while the other device is syncing; neither edit is lost.
+6. Sign out of everything in Karaoke; Quiz (when it exists) or a second Karaoke tab should drop its connection on focus.
+7. Repeat 2 to 5 with Google Drive, and check the single-user warning appears first.
+8. Disconnect the network mid-edit; the Storage button shows a warning, the edit stays local, and it syncs once back online.
+9. Confirm the OneDrive library-link sign-in still works with the new PBE Focus registration (the old StepUp client ID is gone from the code).
+
 ## 6. Phase 2: Quiz
 
 Quiz has real users, so **data must survive**.
