@@ -39,6 +39,7 @@
       var a = document.createElement("a");
       a.href = isCurrent ? "/" : site.url;
       a.textContent = site[labelKey];
+      a.setAttribute("data-site-id", site.id); // brand.css draws each site's accent dot from this
       if (isCurrent) a.className = "active";
       container.appendChild(a);
     });
