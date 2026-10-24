@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-site="pbefocus">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,6 +12,8 @@
     <link rel="icon" type="image/png" href="assets/favicon-512.png" sizes="512x512">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="brand.css">
+    <meta name="theme-color" content="#0f6370">
     <meta name="pbe-site" content="pbefocus">
     <script src="/rogue-sheep.js" defer></script>
     <script src="/site-nav.js" defer></script>
@@ -59,8 +61,12 @@
       </section>
 
       <section class="feature-grid" aria-label="PBEfocus tools">
-        <article class="feature-card score-card">
+        <article class="feature-card score-card" data-tool="scores">
           <div class="card-heading">
+            <picture>
+              <source srcset="assets/marks/scores-dark.svg" media="(prefers-color-scheme: dark)">
+              <img class="tool-mark" src="assets/marks/scores.svg" alt="" width="95" height="84">
+            </picture>
             <h1><a href="https://pbe-scores.wooleys.us">PBE Score Keeper</a></h1>
             <p>Scoring your practice sessions made easy</p>
           </div>
@@ -91,8 +97,12 @@
           <a class="launch-link" href="https://pbe-scores.wooleys.us">Launch Score Keeper</a>
         </article>
 
-        <article class="feature-card quiz-card">
+        <article class="feature-card quiz-card" data-tool="quiz">
           <div class="card-heading">
+            <picture>
+              <source srcset="assets/marks/quiz-dark.svg" media="(prefers-color-scheme: dark)">
+              <img class="tool-mark" src="assets/marks/quiz.svg" alt="" width="95" height="84">
+            </picture>
             <h2><a href="https://quiz.pbefocus.com">PBE Quiz Builder</a></h2>
             <p>Printable quizzes, PowerPoint decks, and interactive practice</p>
           </div>
