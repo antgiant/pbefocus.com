@@ -11,6 +11,8 @@ export class MemoryBackend {
     this.seq = 0;
     this.clock = 1_000;
     this.failNext = [];
+    /** userId -> the settings pointer that person saved (like the app-private file on OneDrive/Google) */
+    this.pointers = new Map();
   }
 
   nextId() {
@@ -142,6 +144,16 @@ export class MemoryProvider {
     const n = { id, name, parent: parent.id, folder: false, owner: this.userId, bytes: new Uint8Array(bytes), tag: "v1", modified: this.backend.tick() };
     this.backend.nodes.set(id, n);
     return this.toEntry(n);
+  }
+
+  async readPointer() {
+    this.backend.maybeFail();
+    return this.backend.pointers.has(this.userId) ? structuredClone(this.backend.pointers.get(this.userId)) : undefined;
+  }
+
+  async writePointer(value) {
+    this.backend.maybeFail();
+    this.backend.pointers.set(this.userId, structuredClone(value));
   }
 
   async remove(folder, entry) {

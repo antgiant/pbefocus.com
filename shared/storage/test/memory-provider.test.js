@@ -86,3 +86,13 @@ test("only the owner removes a file", async () => {
   await a.remove(root, f);
   assert.equal((await a.list(root)).length, 0);
 });
+
+test("the settings pointer is private to each person", async () => {
+  const cloud = new MemoryBackend();
+  const a = cloud.createProvider("a");
+  const b = cloud.createProvider("b");
+  assert.equal(await a.readPointer(), undefined);
+  await a.writePointer({ folder: { id: "m1" } });
+  assert.deepEqual(await a.readPointer(), { folder: { id: "m1" } });
+  assert.equal(await b.readPointer(), undefined);
+});
